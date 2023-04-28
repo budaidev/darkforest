@@ -14,37 +14,35 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.SneakyThrows;
 
 public class Signer {
 	
 	public static final String Email = "budai.attila.istvan@gmail.com";
 	public static final String Team = "PM Mentor team";
 	
+	@SneakyThrows
 	public static Signed sign() {
-		try {
-	        long ts = System.currentTimeMillis();
-	
-	        // Generate key pair
-	        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-	        kpg.initialize(2048);
-	        PrivateKey privateKey = getPrivateKey();
-	
-	        // Generate signature
-	        String signatureString = "email=" + URLEncoder.encode(Email, "UTF-8")
-	                + "&team=" + URLEncoder.encode(Team, "UTF-8")
-	                + "&ts=" + ts;
-	        Signature signature = Signature.getInstance("SHA256withRSA");
-	        signature.initSign(privateKey);
-	        signature.update(signatureString.getBytes("UTF-8"));
-	        byte[] signatureBytes = signature.sign();
-	
-	        // Encode signature in Base64 and URL-encode it
-	        String encodedSignature = URLEncoder.encode(Base64.getEncoder().encodeToString(signatureBytes), "UTF-8");
-	        
-	        return new Signed(ts, encodedSignature);
-		} catch (Exception e) {
-			throw new DarkForestException(e);
-		}
+        long ts = System.currentTimeMillis();
+
+        // Generate key pair
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+        kpg.initialize(2048);
+        PrivateKey privateKey = getPrivateKey();
+
+        // Generate signature
+        String signatureString = "email=" + URLEncoder.encode(Email, "UTF-8")
+                + "&team=" + URLEncoder.encode(Team, "UTF-8")
+                + "&ts=" + ts;
+        Signature signature = Signature.getInstance("SHA256withRSA");
+        signature.initSign(privateKey);
+        signature.update(signatureString.getBytes("UTF-8"));
+        byte[] signatureBytes = signature.sign();
+
+        // Encode signature in Base64 and URL-encode it
+        String encodedSignature = URLEncoder.encode(Base64.getEncoder().encodeToString(signatureBytes), "UTF-8");
+        
+        return new Signed(ts, encodedSignature);
 	}
 	
 	public static PrivateKey getPrivateKey() throws IOException {
