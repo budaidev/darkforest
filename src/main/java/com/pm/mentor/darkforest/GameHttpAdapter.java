@@ -50,9 +50,8 @@ public class GameHttpAdapter {
 	public GameCreated createGame(String gameId, String gameKey, GameConfig gameConfig) {
 		val url = RootUrl + "/game/create/" + gameKey;
 		val configString = serializationService.writeGameConfig(gameConfig);
-		val body = String.format("gameConfig=%s&gameKey=%s", configString, gameKey);
 		
-		val response = httpPost(url, Optional.of(body));
+		val response = httpPost(url, Optional.of(configString));
 		val gameCreated = serializationService.readGameCreated(response);
 		
 		System.out.println(String.format("Game created: %s", gameCreated));
