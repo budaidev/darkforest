@@ -3,6 +3,8 @@ package com.pm.mentor.darkforest.service;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.loxon.javachallenge.challenge.game.event.GameEvent;
+import com.loxon.javachallenge.challenge.game.event.action.GameAction;
 import com.loxon.javachallenge.challenge.game.rest.GameConfig;
 import com.loxon.javachallenge.challenge.game.rest.GameCreated;
 import com.loxon.javachallenge.challenge.game.rest.GameKey;
@@ -31,5 +33,15 @@ public class JsonSerializationService {
 	@SneakyThrows
 	public String writeGameConfig(GameConfig gameConfig) {
 		return mapper.writeValueAsString(gameConfig);
+	}
+	
+	@SneakyThrows
+	public GameEvent readGameEvent(String payload) {
+		return mapper.readValue(payload, GameEvent.class);
+	}
+
+	@SneakyThrows
+	public String writeGameAction(GameAction gameAction) {
+		return mapper.writeValueAsString(gameAction);
 	}
 }

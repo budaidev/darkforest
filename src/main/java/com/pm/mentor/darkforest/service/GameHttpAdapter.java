@@ -75,7 +75,7 @@ public class GameHttpAdapter {
 
 		val response = httpPost(url, Optional.empty());
 
-		System.out.println("Game creation result: " + response);
+		System.out.println("Game start result: " + response);
 
 		return response;
 	}
