@@ -1,4 +1,4 @@
-package com.pm.mentor.darkforest;
+package com.pm.mentor.darkforest.service;
 
 import org.springframework.stereotype.Component;
 
