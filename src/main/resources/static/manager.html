@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+
+    <button type="button" onclick="getGameKey()" >Get game key</button>
+    <input type="text" id="txbGameKey" >
+    
+    <br>
+
+    <button type="button" onclick="createGame()" >Create game</button>
+    <input type="text" id="txbGameId" >
+    
+    <br>
+    
+    <button type="button" onclick="connectWebSocket()" >Connect control websocket</button>
+    
+    <br>
+    
+    <button type="button" onclick="startGame()" >Start game</button>
+    
+    <br>
+    
+    <button type="button" onclick="stopGame()" >Stop game</button>
+
+
+<script type="text/javascript">
+    const UrlRoot = 'http://localhost:8080';
+    let currentGameKey = '';
+    let currentGameId = '';
+  
+    const getGameKey = async () => {
+    	const response = await fetch(`${UrlRoot}/getGameKey`);
+
+    	currentGameKey = (await response.json()).key;
+    	
+    	const txbGameKey = document.getElementById('txbGameKey');
+    	txbGameKey.value = currentGameKey;
+ 	};
+  
+ 	const createGame = async () => {
+ 	    const gameConfig = {
+	   		bots: [1],
+	   		gameType: 'SINGLE_PLAYER'
+ 	    };
+ 	    
+ 	    const response = await fetch(`${UrlRoot}/createGame/${encodeURIComponent(currentGameKey)}`, {
+ 	    	method: 'POST',
+ 	    	headers: {
+ 	    	   'Content-Type': 'application/json',
+    	    },
+ 	    	body: JSON.stringify(gameConfig)
+ 	    });
+ 	    
+ 	    const gameCreateResult = await response.json();
+ 	    
+ 	    console.log(gameCreatedResult);
+ 	    currentGameId = gameCreatedResult.gameId;
+ 	    
+ 	   const txbGameId = document.getElementById('txbGameId');
+       txbGameId.value = currentGameId;
+    };
+  
+    const connectWebSocket = async () => {
+    	const response = await fetch(`${UrlRoot}/connect/${currentGameId}/${currentGameKey}`);
+    };
+  
+    const startGame = async () => {
+    	const response = await fetch(`${UrlRoot}/startGame/${currentGameId}/${currentGameKey}`);
+    	
+    	console.log(await response.json());
+    };
+  
+    const stopGame = async () => {
+    	const response = await fetch(`${UrlRoot}/stopGame/${currentGameId}/${currentGameKey}`);
+    	
+    	console.log(await response.json());
+    };
+  
+</script>
+</body>
+</html>

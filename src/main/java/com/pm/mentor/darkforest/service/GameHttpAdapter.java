@@ -1,10 +1,8 @@
 package com.pm.mentor.darkforest.service;
 
-import com.pm.mentor.darkforest.util.Signer;
-import com.pm.mentor.darkforest.config.ClientConfiguration;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -16,6 +14,8 @@ import org.springframework.stereotype.Component;
 import com.loxon.javachallenge.challenge.game.rest.GameConfig;
 import com.loxon.javachallenge.challenge.game.rest.GameCreated;
 import com.loxon.javachallenge.challenge.game.rest.GameKey;
+import com.pm.mentor.darkforest.config.ClientConfiguration;
+import com.pm.mentor.darkforest.util.Signer;
 
 import lombok.SneakyThrows;
 import lombok.val;
@@ -58,7 +58,7 @@ public class GameHttpAdapter {
 		return gameKey;
 	}
 
-	public GameCreated createGame(String gameId, String gameKey, GameConfig gameConfig) {
+	public GameCreated createGame(String gameKey, GameConfig gameConfig) {
 		val url = RootUrl + "/game/create/" + gameKey;
 		val configString = serializationService.writeGameConfig(gameConfig);
 
@@ -70,7 +70,7 @@ public class GameHttpAdapter {
 		return gameCreated;
 	}
 
-	public String startGame(String gameId, GameKey gameKey) {
+	public String startGame(String gameId, String gameKey) {
 		val url = String.format("%s/game/start/%s/%s", RootUrl, gameId, gameKey);
 
 		val response = httpPost(url, Optional.empty());
@@ -80,7 +80,7 @@ public class GameHttpAdapter {
 		return response;
 	}
 
-	public String stopGame(String gameId, GameKey gameKey) {
+	public String stopGame(String gameId, String gameKey) {
 		val url = String.format("%s/game/stop/%s/%s", RootUrl, gameId, gameKey);
 
 		val response = httpPost(url, Optional.empty());
@@ -107,9 +107,8 @@ public class GameHttpAdapter {
         if (payload.isPresent()) {
 			connection.setRequestProperty("Content-Type", "application/json");
 			connection.setDoOutput(true);
-			try (OutputStream os = connection.getOutputStream()) {
-				byte[] input = payload.get().getBytes("utf-8");
-				os.write(input, 0, input.length);
+			try (PrintWriter writer = new PrintWriter(connection.getOutputStream())) {
+				writer.print(payload.get());
 			}
         }
 
