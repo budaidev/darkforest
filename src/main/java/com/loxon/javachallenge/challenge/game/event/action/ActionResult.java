@@ -14,13 +14,15 @@ public enum ActionResult {
      */
     INSUFFICIENT_ACTIONS("You ran out of concurrent actions to initiate", true),
     /**
-     * Az az eset, amikor egy akciót nem lehet teljesíteni, mert a játékos nem definiált célbolygót.
+     * Az az eset, amikor egy akciót nem lehet teljesíteni, mert a játékos nem definiált célbolygót,
+     * vagy nem létező bolygóazonosítót adott meg vagy pajzsfelhúzás esetén nem a saját bolygóját adta meg.
      */
-    TARGET_PLANET_MISSING("You forgot to specify the target planet.", true),
+    TARGET_PLANET_INVALID("You forgot to specify the target planet.", true),
     /**
-     * Az az eset, amikor egy akciót nem lehet teljesíteni, mert a játékos nem definiált kiindulási bolygót.
+     * Az az eset, amikor egy akciót nem lehet teljesíteni, mert a játékos nem definiált kiindulási bolygót
+     * vagy nem létező bolybóazonosítót adott meg.
      */
-    ORIGIN_PLANET_MISSING("You forgot to specify the origin planet.", true),
+    ORIGIN_PLANET_INVALID("You forgot to specify the origin planet.", true),
     /**
      * Az az eset, amikor egy akciót nem lehet teljesíteni, mert a játékos pajzsa blokkolja.
      */

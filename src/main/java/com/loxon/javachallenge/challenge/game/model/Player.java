@@ -23,7 +23,7 @@ public class Player {
     /**
      * Tárolja a játékos tulajdonában lévő, nem elpusztított bolygók számát.
      */
-    private int numOfOwnedPlanets;
+    private int numOfOwnedPlanets = 1;
     /**
      * Tárolja a játékos által elpusztított bolygók számát.
      */

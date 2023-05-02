@@ -221,4 +221,9 @@ public class GameEvent {
 
         return event;
     }
+	
+	public static GameEvent wrapEvent(Game game, Object o) {
+		return wrapEvent(game.getGameId(), o);
+	}
+
 }

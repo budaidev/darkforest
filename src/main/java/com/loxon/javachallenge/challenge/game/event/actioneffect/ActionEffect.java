@@ -1,5 +1,6 @@
 package com.loxon.javachallenge.challenge.game.event.actioneffect;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,12 +25,16 @@ import lombok.Data;
 		})
 public class ActionEffect {
 
+	public ActionEffect() {
+		time = System.currentTimeMillis();
+	}
+	
 	/**
 	 * Az akcióhoz kapcsolódó hatások listája.<br>
 	 * Az elküldött JSON üzenetben "ec" kulccsal szerepel.
 	 * @see ActionEffectType
 	 */
-	@JsonProperty("ec") private List<ActionEffectType> effectChain;
+	@JsonProperty("ec") private List<ActionEffectType> effectChain = new ArrayList<ActionEffectType>();
 
 	/**
 	 * A hatást kiváltó játékos azonosítója.<br>
