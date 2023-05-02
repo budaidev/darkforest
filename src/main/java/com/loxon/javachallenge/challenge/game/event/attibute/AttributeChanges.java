@@ -3,6 +3,8 @@ package com.loxon.javachallenge.challenge.game.event.attibute;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Data;
 
 /**
@@ -32,16 +34,26 @@ public class AttributeChanges {
      */
     private List<AttributeChange> changes = new ArrayList<>();
 
-    /**
-     *
-     * @param id
-     * @param type
-     * @return
-     */
-    public static AttributeChanges createChanges(int id, String type){
-        AttributeChanges changes = new AttributeChanges();
-        changes.setAffectedId(id);
-        changes.setAffectedType(type);
-        return changes;
+    
+    public AttributeChanges() {
+    	
+    }
+    
+    @JsonIgnore
+    public boolean isForPlayer() {
+    	return affectedType.equals("Player");
+    }
+
+    @JsonIgnore
+    public boolean isForPlanet() {
+    	return affectedType.equals("Planet");
+    }
+    
+    @JsonIgnore
+    public boolean isExtinctMessage() {
+    	if (!isForPlayer()) {
+			return false;
+		}
+    	return "extinct".equals(changes.get(0).getName());
     }
 }

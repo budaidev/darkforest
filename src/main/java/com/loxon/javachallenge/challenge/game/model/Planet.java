@@ -1,5 +1,7 @@
 package com.loxon.javachallenge.challenge.game.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -25,5 +27,10 @@ public class Planet extends MapObject {
 	 * A pajzs lejárati időpontjának tárolására szolgáló milliszekundumos érték.
 	 */
 	private long shieldRemovedAt; // EPOCH time in milliseconds. E.g.: System.currentTimeInMillis();
+	
+	@JsonIgnore
+	public boolean hasShield() {
+		return shieldErectedAt > 0;
+	}
 
 }

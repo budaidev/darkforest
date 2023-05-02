@@ -25,10 +25,10 @@ public class GravityWaveCrossing extends ActionEffect {
 	@JsonProperty("sId") private int sourceId;
 
 	/**
-	 * MBH esetén: a GravityWave-et kiváltó lövés forrásának iránya.
-	 * Űrmisszió esetén: az űrmisszió az érkezési bolygó irány-szöge valamennyi bizonytalansággal.
-	 * Féreglyuk elkészülés esetén: az építő játékos, féreglyukhoz legközelebb álló bolygójának az iránya. 
-	 * Passzivitás esetén: a passzív játékos egy véletlenszerűen kiválasztott bolygójának az irányszöge, valamennyi bizonytalansággal.
+	 * MBH esetén az MBH-t indító bolygó irányszöge valamekkora bizonytalansággal.
+	 * Űrmisszió esetén az űrmisszió érkezési bolygójának irányszöge valamekkora bizonytalansággal.
+	 * Féreglyuk elkészülés esetén az építő játékos féreglyukhoz legközelebb álló bolygójának az irányszöge valamekkora bizonytalansággal.
+	 * Passzivitás esetén a passzív játékos egy véletlenszerűen kiválasztott bolygójának az irányszöge valamekkora bizonytalansággal.
 	 * 
 	 */
 	@JsonProperty("dir") private double direction;

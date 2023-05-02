@@ -22,8 +22,8 @@ public class WormHole extends MapObject {
 	 * @return távolság
 	 */
 	public double distanceFromOutput(MapObject mapObject) {
-		double px = mapObject.getX() - this.getXb();
-		double py = mapObject.getY() - this.getYb();
+		double px = mapObject.getX() - xb;
+		double py = mapObject.getY() - yb;
 		return Math.sqrt(px * px + py * py);
 	}
 }

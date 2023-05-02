@@ -34,6 +34,7 @@ public abstract class GameAction {
 	/**
 	 * Űrmisszó és MBH kilövés esetén a célbavett bolygó azonosítója.
 	 * Pajzsfelhúzás esetén a megvédeni kívánt bolygó azonosítoja.
+	 * Féreglyuk építés esetén az új féreglyuk generált azonosítója, ezesetben nem kell kitölteni.
 	 */
 	private int targetId;
 }
