@@ -125,6 +125,7 @@
         socket.addEventListener('message', event => {
             const data = JSON.parse(event.data);
             console.log(data);
+            drawUi(data);
             // Create the planets and wormholes using the data object
         });
     }
@@ -177,14 +178,7 @@
     	console.log(await response.json());
     };
 
-    const drawUi = () => {
-        const jsonConfig = {
-            width: 800,
-            height: 600,
-            planets: [],
-            wormholes: []
-
-        };
+    const drawUi = (jsonConfig) => {
         /*const jsonConfig = {
                 width: 800,
                 height: 600,
@@ -224,11 +218,11 @@
         jsonConfig.planets.forEach((planet) => {
             const planetDiv = document.createElement('div');
             planetDiv.className = 'planet';
-            planetDiv.style.width = planet.radius * 2 + 'px';
-            planetDiv.style.height = planet.radius * 2 + 'px';
+            planetDiv.style.width = 25 + 'px';
+            planetDiv.style.height = 25 + 'px';
             planetDiv.style.backgroundColor = planet.color;
-            planetDiv.style.left = planet.x - planet.radius + 'px';
-            planetDiv.style.top = planet.y - planet.radius + 'px';
+            planetDiv.style.left = planet.x - 25 + 'px';
+            planetDiv.style.top = planet.y - 25 + 'px';
 
             const planetPopup = document.createElement('div');
             planetPopup.className = 'planet-popup';
@@ -239,33 +233,33 @@
         });
 
         // Create the wormholes
-        jsonConfig.wormholes.forEach((wormhole) => {
+        if(jsonConfig.wormholes) {
+            jsonConfig.wormholes.forEach((wormhole) => {
 
-            const dx = wormhole.x2 - wormhole.x1;
-            const dy = wormhole.y2 - wormhole.y1;
-            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-            const length = Math.sqrt(dx * dx + dy * dy);
+                const dx = wormhole.x2 - wormhole.x1;
+                const dy = wormhole.y2 - wormhole.y1;
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                const length = Math.sqrt(dx * dx + dy * dy);
 
-            const wormholeDiv = document.createElement('div');
-            wormholeDiv.className = 'wormhole';
-            wormholeDiv.style.width = length + 'px';
-            wormholeDiv.style.left = wormhole.x1 + 'px';
-            wormholeDiv.style.top = wormhole.y1 - 5 + 'px';
-            wormholeDiv.style.transform = 'rotate(' + angle + 'deg)';
-            wormholeDiv.style.backgroundColor = wormhole.color;
+                const wormholeDiv = document.createElement('div');
+                wormholeDiv.className = 'wormhole';
+                wormholeDiv.style.width = length + 'px';
+                wormholeDiv.style.left = wormhole.x1 + 'px';
+                wormholeDiv.style.top = wormhole.y1 - 5 + 'px';
+                wormholeDiv.style.transform = 'rotate(' + angle + 'deg)';
+                wormholeDiv.style.backgroundColor = wormhole.color;
 
-            const wormholePopup = document.createElement('div');
-            wormholePopup.className = 'wormhole-popup';
-            wormholePopup.innerHTML = '<strong>' + wormhole.name + '</strong><br>' + wormhole.info;
+                const wormholePopup = document.createElement('div');
+                wormholePopup.className = 'wormhole-popup';
+                wormholePopup.innerHTML = '<strong>' + wormhole.name + '</strong><br>' + wormhole.info;
 
-            wormholeDiv.appendChild(wormholePopup);
-            document.getElementById('container').appendChild(wormholeDiv);
-        });
+                wormholeDiv.appendChild(wormholePopup);
+                document.getElementById('container').appendChild(wormholeDiv);
+            })
+        };
 
 
     }
-
-    drawUi();
   
 </script>
 </body>

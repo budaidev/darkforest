@@ -1,5 +1,10 @@
 package com.pm.mentor.darkforest.service;
 
+import com.loxon.javachallenge.challenge.game.event.GameEvent;
+import com.loxon.javachallenge.challenge.game.model.Planet;
+import com.pm.mentor.darkforest.ui.GameDto;
+import com.pm.mentor.darkforest.ui.GameStateHolder;
+import java.util.List;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketMessage;
@@ -34,14 +39,18 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 	private final String RootUrl;
 	private final AIContainer aiContainer;
 
+	private final GameStateHolder gameStateHolder;
+
 	private WebSocketSession clientSession;
 
 	public GameWebSocketAdapter(JsonSerializationService serializationService,
 								ClientConfiguration clientConfiguration,
-								AIContainer aiContainer) {
+								AIContainer aiContainer,
+								GameStateHolder gameStateHolder) {
 		this.serializationService = serializationService;
 		aiContainer.attachGameActionApi(this);
 		this.aiContainer = aiContainer;
+		this.gameStateHolder = gameStateHolder;
 
 		this.RootUrl = String.format("ws://%s:%s", clientConfiguration.getUrl(), clientConfiguration.getPort());
 	}
@@ -79,7 +88,7 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 
 		System.out.println(payload);
 
-		val gameEvent = serializationService.readGameEvent(payload);
+		GameEvent gameEvent = serializationService.readGameEvent(payload);
 
 		aiContainer.receiveGameEvent(gameEvent);
 	}
