@@ -1,28 +1,60 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <title>Game Control Panel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            margin: 20px;
+        }
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin-right: 20px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            min-width: 240px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            margin-right: 20px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
 </head>
 <body>
 
-    <button type="button" onclick="getGameKey()" >Get game key</button>
-    <input type="text" id="txbGameKey" >
-    
-    <br>
+<h1>Game Control Panel</h1>
 
-    <button type="button" onclick="createGame()" >Create game</button>
-    <input type="text" id="txbGameId" >
-    
-    <br>
-    
-    <button type="button" onclick="connectWebSocket()" >Connect control websocket</button>
-    
-    <br>
-    
-    <button type="button" onclick="startGame()" >Start game</button>
-    
-    <br>
-    
-    <button type="button" onclick="stopGame()" >Stop game</button>
+<div>
+    <button type="button" onclick="getGameKey()">Get Game Key</button>
+    <input type="text" id="txbGameKey" readonly>
+</div>
+
+<div>
+    <button type="button" onclick="createGame()">Create Game</button>
+    <input type="text" id="txbGameId" readonly>
+</div>
+
+<div>
+    <button type="button" onclick="connectWebSocket()">Connect Control WebSocket</button>
+</div>
+
+<div>
+    <button type="button" onclick="startGame()">Start Game</button>
+    <button type="button" onclick="stopGame()">Stop Game</button>
+</div>
 
 
 <script type="text/javascript">
@@ -53,7 +85,7 @@
  	    	body: JSON.stringify(gameConfig)
  	    });
  	    
- 	    const gameCreateResult = await response.json();
+ 	    const gameCreatedResult = await response.json();
  	    
  	    console.log(gameCreatedResult);
  	    currentGameId = gameCreatedResult.gameId;
