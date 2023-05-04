@@ -15,7 +15,7 @@ public class WebSocketForUI implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(new PlanetWebSocketHandler(), "/planets");
+        registry.addHandler(new PlanetWebSocketHandler(), "/planets").setAllowedOrigins("*");
     }
 
     private static class PlanetWebSocketHandler extends TextWebSocketHandler {
