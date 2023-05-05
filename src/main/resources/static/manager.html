@@ -4,10 +4,17 @@
     <meta charset="UTF-8">
     <title>Game Control Panel</title>
     <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
         body {
             font-family: Arial, sans-serif;
             font-size: 16px;
-            margin: 20px;
+            margin-left: 20px;
+            display: flex;
+            flex-direction: column;
         }
         button {
             background-color: #2BA3C1;
@@ -23,6 +30,17 @@
             cursor: pointer;
             min-width: 240px;
         }
+        select {
+            padding: 10px 20px;
+            text-align: center;
+            display: inline-block;
+            font-size: 16px;
+            margin-right: 20px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            min-width: 240px;
+        }
+
         input[type="text"] {
             padding: 10px;
             font-size: 16px;
@@ -75,11 +93,34 @@
         .wormhole:hover + .wormhole-popup {
             display: block;
         }
+
+        #container {
+            border: solid black;
+            height: 100%;
+            background-color: #EEEEEE;
+            flex: 1;
+            box-sizing: border-box; /* add this line */
+            padding: 10px; /* add your desired padding */
+        }
+
+        main {
+            flex: 1;
+            display: flex; /* add this line */
+            flex-direction: column; /* add this line */
+            box-sizing: border-box; /* add this line */
+            padding: 10px; /* add your desired padding */
+        }
     </style>
 </head>
 <body>
 
 <h1>Game Control Panel</h1>
+
+<main>
+<div>
+    <button type="button" onclick="joinUiSocket()">Join websocket for UI</button>
+    <input type="text" id="txbConnectedToServer" readonly>
+</div>
 
 <div>
     <button type="button" onclick="getGameKey()">Get Game Key</button>
@@ -88,6 +129,11 @@
 
 <div>
     <button type="button" onclick="createGame()">Create Game</button>
+    <select id="dropdownList">
+        <option value="SINGLE_PLAYER">SINGLE_PLAYER</option>
+        <option value="MULTI_PLAYER">MULTI_PLAYER</option>
+        <option value="QUALIFYING">QUALIFYING</option>
+    </select>
     <input type="text" id="txbGameId" readonly>
 </div>
 
@@ -100,11 +146,15 @@
     <button type="button" onclick="stopGame()">Stop Game</button>
 </div>
 
-<div>
-    <button type="button" onclick="joinUiSocket()">Join websocket for UI</button>
-</div>
+    <div>
+        <button type="button" onclick="getBots()">Get Bots</button>
+    </div>
+
+
 
 <div id="container"></div>
+
+</main>
 
 
 <script type="text/javascript">
@@ -115,6 +165,16 @@
     const joinUiSocket = async () => {
         // Create a new WebSocket connection to the server
         const socket = new WebSocket(`ws://localhost:8080/planets`);
+
+        socket.addEventListener('open', (event) => {
+            const txbConnectedToServer = document.getElementById('txbConnectedToServer');
+            txbConnectedToServer.value = "Open";
+        });
+
+        socket.addEventListener('close', (event) => {
+            const txbConnectedToServer = document.getElementById('txbConnectedToServer');
+            txbConnectedToServer.value = "Closed";
+        });
 
         // When the WebSocket connection is open, send a message to request the JSON data
         socket.addEventListener('open', () => {
@@ -140,10 +200,16 @@
  	};
   
  	const createGame = async () => {
+
+        const dropdownList = document.getElementById("dropdownList");
+        const selectedType = dropdownList.value;
+
  	    const gameConfig = {
 	   		bots: [1],
-	   		gameType: 'SINGLE_PLAYER'
+	   		gameType: selectedType
  	    };
+
+         console.log('create game with config ' + gameConfig)
  	    
  	    const response = await fetch(`${UrlRoot}/createGame/${encodeURIComponent(currentGameKey)}`, {
  	    	method: 'POST',
@@ -178,7 +244,13 @@
     	console.log(await response.json());
     };
 
-    const drawUi = (jsonConfig) => {
+    const getBots = async () => {
+        const response = await fetch(`${UrlRoot}/bots`);
+
+        console.log(await response.json());
+    };
+
+    const drawUi = async (jsonConfig) => {
         /*const jsonConfig = {
                 width: 800,
                 height: 600,
@@ -233,7 +305,7 @@
         });
 
         // Create the wormholes
-        if(jsonConfig.wormholes) {
+        if (jsonConfig.wormholes) {
             jsonConfig.wormholes.forEach((wormhole) => {
 
                 const dx = wormhole.x2 - wormhole.x1;
@@ -256,7 +328,10 @@
                 wormholeDiv.appendChild(wormholePopup);
                 document.getElementById('container').appendChild(wormholeDiv);
             })
-        };
+        }
+        ;
+
+        await joinUiSocket();
 
 
     }

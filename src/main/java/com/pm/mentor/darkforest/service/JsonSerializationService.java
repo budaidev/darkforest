@@ -1,5 +1,8 @@
 package com.pm.mentor.darkforest.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.loxon.javachallenge.challenge.game.rest.BotDefinition;
+import java.util.List;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -28,6 +31,12 @@ public class JsonSerializationService {
 	@SneakyThrows
 	public GameCreated readGameCreated(String payload) {
 		return mapper.readValue(payload, GameCreated.class);
+	}
+
+	@SneakyThrows
+	public List<BotDefinition> readBotDefinition(String payload) {
+		return mapper.readValue(payload, new TypeReference<>() {
+		});
 	}
 	
 	@SneakyThrows

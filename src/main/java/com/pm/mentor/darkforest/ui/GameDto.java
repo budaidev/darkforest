@@ -10,6 +10,8 @@ import lombok.Data;
 @Data
 public class GameDto {
 
+    private String connectionStatus = "Not connected";
+
     private long width;
     /**
      * Az univerzum magassága 2D-ben.

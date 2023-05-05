@@ -1,5 +1,6 @@
 package com.pm.mentor.darkforest.service;
 
+import com.loxon.javachallenge.challenge.game.rest.BotDefinition;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -7,6 +8,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Component;
@@ -88,6 +90,16 @@ public class GameHttpAdapter {
 		System.out.println("Game creation result: " + response);
 
 		return response;
+	}
+
+	public List<BotDefinition> getBots() {
+		val url = String.format("%s/game/bots", RootUrl);
+
+		val response = httpGet(url);
+
+		val bots = serializationService.readBotDefinition(response);
+
+		return bots;
 	}
 
 	@SneakyThrows
