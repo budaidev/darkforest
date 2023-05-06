@@ -21,8 +21,10 @@ import com.pm.mentor.darkforest.util.Signer;
 
 import lombok.SneakyThrows;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 public class GameHttpAdapter {
 
 	private final String RootUrl;
@@ -55,7 +57,7 @@ public class GameHttpAdapter {
 
 		val gameKey = serializationService.readGameKey(response);
 
-		System.out.println(String.format("Game key fetched: %s", gameKey));
+		log.info(String.format("Game key fetched: %s", gameKey));
 
 		return gameKey;
 	}
@@ -67,7 +69,7 @@ public class GameHttpAdapter {
 		val response = httpPost(url, Optional.of(configString));
 		val gameCreated = serializationService.readGameCreated(response);
 
-		System.out.println(String.format("Game created: %s", gameCreated));
+		log.info(String.format("Game created: %s", gameCreated));
 
 		return gameCreated;
 	}
@@ -77,7 +79,7 @@ public class GameHttpAdapter {
 
 		val response = httpPost(url, Optional.empty());
 
-		System.out.println("Game start result: " + response);
+		log.info("Game start result: " + response);
 
 		return response;
 	}
@@ -87,7 +89,7 @@ public class GameHttpAdapter {
 
 		val response = httpPost(url, Optional.empty());
 
-		System.out.println("Game creation result: " + response);
+		log.info("Game stop result: " + response);
 
 		return response;
 	}

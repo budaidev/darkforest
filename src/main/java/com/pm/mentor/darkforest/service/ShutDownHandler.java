@@ -1,13 +1,15 @@
 package com.pm.mentor.darkforest.service;
 
-import com.pm.mentor.darkforest.contoller.ConnectionState;
-import com.pm.mentor.darkforest.contoller.ConnectionStateHolder;
-import com.pm.mentor.darkforest.contoller.GameController;
-import com.pm.mentor.darkforest.ui.GameStateHolder;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Component;
 
+import com.pm.mentor.darkforest.contoller.ConnectionState;
+import com.pm.mentor.darkforest.contoller.ConnectionStateHolder;
+
+import lombok.extern.slf4j.Slf4j;
+
 @Component
+@Slf4j
 public class ShutDownHandler implements DisposableBean {
 
     private final GameHttpAdapter gameHttpAdapter;
@@ -16,19 +18,18 @@ public class ShutDownHandler implements DisposableBean {
     public ShutDownHandler(GameHttpAdapter gameHttpAdapter, ConnectionStateHolder connectionStateHolder){
         this.gameHttpAdapter = gameHttpAdapter;
         this.connectionStateHolder = connectionStateHolder;
-
     }
 
     @Override
     public void destroy() throws Exception {
         // Code to run when application is shutting down
-        System.out.println("Application is shutting down...");
+    	log.info("Application is shutting down...");
 
         connectionStateHolder.getAllGames().forEach(System.out::println);
 
-        for (ConnectionState state : connectionStateHolder.getLiveGames()){
-            System.out.println("Stopping game with game key " + state.getGameId() + " game id " + state.getGameId() );
-            System.out.println(gameHttpAdapter.stopGame(state.getGameKey(), state.getGameId()));
+        for (ConnectionState state : connectionStateHolder.getLiveGames()) {
+        	log.info("Stopping game with game key " + state.getGameId() + " game id " + state.getGameId() );
+        	gameHttpAdapter.stopGame(state.getGameKey(), state.getGameId());
         }
     }
 }
