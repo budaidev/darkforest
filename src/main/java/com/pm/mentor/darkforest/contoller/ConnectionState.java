@@ -1,7 +1,5 @@
 package com.pm.mentor.darkforest.contoller;
 
-import com.loxon.javachallenge.challenge.game.rest.GameCreated;
-import com.loxon.javachallenge.challenge.game.rest.GameKey;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

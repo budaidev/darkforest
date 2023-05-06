@@ -1,11 +1,10 @@
 package com.pm.mentor.darkforest.service;
 
-import com.loxon.javachallenge.challenge.game.event.GameEvent;
-import com.loxon.javachallenge.challenge.game.model.Planet;
-import com.pm.mentor.darkforest.ui.GameDto;
-import com.pm.mentor.darkforest.ui.GameStateHolder;
-import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -13,6 +12,7 @@ import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 
+import com.loxon.javachallenge.challenge.game.event.GameEvent;
 import com.loxon.javachallenge.challenge.game.event.action.BuildWormHoleAction;
 import com.loxon.javachallenge.challenge.game.event.action.EntryPointIndex;
 import com.loxon.javachallenge.challenge.game.event.action.ErectShieldAction;
@@ -21,16 +21,14 @@ import com.loxon.javachallenge.challenge.game.event.action.ShootMBHAction;
 import com.loxon.javachallenge.challenge.game.event.action.SpaceMissionAction;
 import com.pm.mentor.darkforest.ai.GameActionApi;
 import com.pm.mentor.darkforest.config.ClientConfiguration;
-
-import org.springframework.stereotype.Component;
-import org.springframework.web.socket.TextMessage;
+import com.pm.mentor.darkforest.ui.GameStateHolder;
 
 import lombok.SneakyThrows;
 import lombok.val;
-
-import java.util.concurrent.atomic.AtomicInteger;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 
 	private static AtomicInteger commandRefSequence = new AtomicInteger(1000);
@@ -78,7 +76,7 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) {
-		System.out.println("control connection established");
+		log.info("control connection established");
 	}
 
 	@Override
@@ -86,7 +84,7 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 
 		String payload = (String)message.getPayload();
 
-		System.out.println(payload);
+		log.info(payload);
 
 		GameEvent gameEvent = serializationService.readGameEvent(payload);
 
@@ -102,7 +100,7 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) {
-		System.out.println("control connection closed");
+		log.info("control connection closed");
 	}
 
 	@Override
