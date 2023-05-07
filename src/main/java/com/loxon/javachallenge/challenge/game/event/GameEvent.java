@@ -12,8 +12,11 @@ import com.loxon.javachallenge.challenge.game.event.attibute.AttributeChanges;
 import com.loxon.javachallenge.challenge.game.model.Game;
 import com.loxon.javachallenge.challenge.game.model.GameStats;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 
 /**
@@ -21,6 +24,8 @@ import lombok.Getter;
  * */
 @Getter
 @EqualsAndHashCode
+@Builder
+@AllArgsConstructor
 public class GameEvent {
 
 	private static AtomicInteger idGenerator = new AtomicInteger();

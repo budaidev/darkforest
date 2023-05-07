@@ -1,6 +1,7 @@
 package com.loxon.javachallenge.challenge.game.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.List;
  * Ez tárolja a világot, vagyis azt az univerzumot, amelyben a játék zajlik.
  */
 @Data
+@Builder
 public class World {
     /**
      * Az univerzum szélessége 2D-ben.

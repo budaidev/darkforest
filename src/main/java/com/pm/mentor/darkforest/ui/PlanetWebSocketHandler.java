@@ -1,7 +1,9 @@
 package com.pm.mentor.darkforest.ui;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.springframework.context.event.EventListener;
@@ -20,11 +22,12 @@ public class PlanetWebSocketHandler extends TextWebSocketHandler {
     private GameStateHolder gameStateHolder;
     private ObjectMapper objectMapper;
 
-    private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
+    private final ConcurrentLinkedQueue<WebSocketSession> sessions;
 
     public PlanetWebSocketHandler(GameStateHolder gameStateHolder, ObjectMapper objectMapper) {
         this.gameStateHolder = gameStateHolder;
         this.objectMapper = objectMapper;
+        this.sessions = new ConcurrentLinkedQueue<>();
     }
 
     @Override
@@ -49,6 +52,7 @@ public class PlanetWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         // Add the new session to the sessions collection
+        super.afterConnectionEstablished(session);
         sessions.add(session);
 
         // Send the current state of MyObject to the client when the WebSocket connection is established
@@ -65,6 +69,9 @@ public class PlanetWebSocketHandler extends TextWebSocketHandler {
     @EventListener
     public void handleObjectChangedEvent(GameStateChangeEvent event) throws Exception {
         // Send the updated MyObject to all connected clients when the object is changed
+        System.out.println("Received event: " + event.getMyObject());
+        System.out.println("Number of sessions: " + sessions.size());
+
         String json = objectMapper.writeValueAsString(event.getMyObject());
         for (WebSocketSession session : sessions) {
             session.sendMessage(new TextMessage(json));

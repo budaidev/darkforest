@@ -1,5 +1,11 @@
 package com.pm.mentor.darkforest.service;
 
+import com.loxon.javachallenge.challenge.game.event.EventType;
+import com.loxon.javachallenge.challenge.game.model.Game;
+import com.loxon.javachallenge.challenge.game.model.Planet;
+import com.loxon.javachallenge.challenge.game.model.World;
+import com.pm.mentor.darkforest.ui.GameDtoMapper;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.stereotype.Component;
@@ -88,6 +94,8 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 
 		GameEvent gameEvent = serializationService.readGameEvent(payload);
 
+		gameStateHolder.setMyObject(GameDtoMapper.toGameDto(gameEvent));
+
 		aiContainer.receiveGameEvent(gameEvent);
 	}
 
@@ -168,5 +176,33 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 		send(action);
 
 		return id;
+	}
+
+	public void testUi(){
+		GameEvent g1 = new GameEvent();
+		g1.setGame(GameEvent.builder()
+				.eventType(EventType.GAME_STARTED)
+				.game(Game.builder()
+						.world(World.builder()
+								.width(800)
+								.height(600)
+								.planets(
+										List.of(
+												Planet.builder()
+														.id(0)
+														.x(100)
+														.y(100)
+														.player(1)
+														.shieldErectedAt(0)
+														.classM(false)
+														.destroyed(false)
+														.shieldRemovedAt(0)
+														.build()))
+								.build())
+						.build()).build().getGame());
+
+		gameStateHolder.setMyObject(GameDtoMapper.toGameDto(g1));
+
+
 	}
 }

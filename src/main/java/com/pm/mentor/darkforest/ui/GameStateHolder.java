@@ -1,5 +1,6 @@
 package com.pm.mentor.darkforest.ui;
 
+import com.pm.mentor.darkforest.ui.dto.GameDto;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 

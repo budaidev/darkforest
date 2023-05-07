@@ -1,5 +1,6 @@
 package com.pm.mentor.darkforest.ui;
 
+import com.pm.mentor.darkforest.ui.dto.GameDto;
 import org.springframework.context.ApplicationEvent;
 
 public class GameStateChangeEvent extends ApplicationEvent {

@@ -1,4 +1,4 @@
-package com.pm.mentor.darkforest.ui;
+package com.pm.mentor.darkforest.ui.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.loxon.javachallenge.challenge.game.model.Planet;

@@ -77,4 +77,11 @@ public class GameController {
     }
 
 
+    @GetMapping("/test")
+    public String startTestGame() {
+        gameWebSocketAdapter.testUi();
+        return "test";
+    }
+
+
 }
