@@ -37,7 +37,7 @@ class DropdownList {
      * @returns {void}
      */
     addAndSelectItem(item) {
-        const option = this._createOption(item, true);
+        const option = this.#createOption(item, true);
 
         for (const item of this.#itemsList) {
             item.selected = false;
