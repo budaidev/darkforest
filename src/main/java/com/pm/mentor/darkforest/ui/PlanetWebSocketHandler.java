@@ -22,12 +22,12 @@ public class PlanetWebSocketHandler extends TextWebSocketHandler {
     private GameStateHolder gameStateHolder;
     private ObjectMapper objectMapper;
 
-    private final ConcurrentLinkedQueue<WebSocketSession> sessions;
+    private final CopyOnWriteArrayList<WebSocketSession> sessions;
 
     public PlanetWebSocketHandler(GameStateHolder gameStateHolder, ObjectMapper objectMapper) {
         this.gameStateHolder = gameStateHolder;
         this.objectMapper = objectMapper;
-        this.sessions = new ConcurrentLinkedQueue<>();
+        this.sessions = new CopyOnWriteArrayList<>();
     }
 
     @Override
@@ -68,13 +68,10 @@ public class PlanetWebSocketHandler extends TextWebSocketHandler {
 
     @EventListener
     public void handleObjectChangedEvent(GameStateChangeEvent event) throws Exception {
-        // Send the updated MyObject to all connected clients when the object is changed
-        System.out.println("Received event: " + event.getMyObject());
-        System.out.println("Number of sessions: " + sessions.size());
-
-        String json = objectMapper.writeValueAsString(event.getMyObject());
-        for (WebSocketSession session : sessions) {
-            session.sendMessage(new TextMessage(json));
-        }
+            // Send the updated MyObject to all connected clients when the object is changed
+            String json = objectMapper.writeValueAsString(event.getMyObject());
+            for (WebSocketSession session : sessions) {
+                session.sendMessage(new TextMessage(json));
+            }
     }
 }

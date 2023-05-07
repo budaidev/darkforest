@@ -13,14 +13,16 @@ public class WebSocketForUI implements WebSocketConfigurer {
 
     private final GameStateHolder holder;
     private final ObjectMapper mapper;
+    private final PlanetWebSocketHandler handler;
 
-    public WebSocketForUI(GameStateHolder holder, ObjectMapper mapper) {
+    public WebSocketForUI(GameStateHolder holder, ObjectMapper mapper, PlanetWebSocketHandler handler) {
         this.holder = holder;
         this.mapper = mapper;
+        this.handler = handler;
     }
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(new PlanetWebSocketHandler(holder, mapper), "/planets").setAllowedOrigins("*");
+        registry.addHandler(handler, "/planets").setAllowedOrigins("*");
     }
 }
