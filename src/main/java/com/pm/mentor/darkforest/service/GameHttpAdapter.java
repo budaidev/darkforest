@@ -142,6 +142,17 @@ public class GameHttpAdapter {
 			}
 
 			return response.toString();
+        } catch (java.io.IOException e) {
+        	log.warn("Dumping connection headers...");
+        	
+        	for (val headerField : connection.getHeaderFields().entrySet()) {
+        		val headerName = headerField.getKey();
+        		val headerValue = String.join(", ", headerField.getValue());
+        		
+        		log.warn(String.format("%s: %s", headerName, headerValue));
+        	}
+        	
+        	throw e;
         }
 	}
 }

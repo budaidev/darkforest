@@ -2,17 +2,27 @@ package com.pm.mentor.darkforest.ai;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
+import com.loxon.javachallenge.challenge.game.event.ConnectionResultType;
+import com.loxon.javachallenge.challenge.game.event.EventType;
 import com.loxon.javachallenge.challenge.game.event.GameEvent;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class AIRunner implements Runnable {
 	
 	private final LinkedBlockingQueue<GameEvent> commandQueue = new LinkedBlockingQueue<>();
 	
 	private AI aiImplementation;
 	private long lastExecution = 0;
+	
+	private int playerId;
 
 	@Override
 	public void run() {
+		val timeStarted = System.currentTimeMillis();
+		
 		var needHeartBeat = shouldSendHeartBeat();
 		lastExecution = System.currentTimeMillis();
 		
@@ -24,14 +34,32 @@ public class AIRunner implements Runnable {
 		if (needHeartBeat) {
 			aiImplementation.heartBeat();
 		}
+		
+		if (aiImplementation.isRunning()) {
+			val elapsed = System.currentTimeMillis() - timeStarted;
+			log.info("AI logic execution took: %d ms", elapsed);
+		}
 	}
 
-	public void init(AI impl, GameActionApi gameActionApi) {
+	public void init(AI impl) {
 		aiImplementation = impl;
-		aiImplementation.init(gameActionApi);
 	}
 
 	public void receiveEvent(GameEvent event) {
+		if (event.getEventType() == EventType.CONNECTION_RESULT) {
+			val result = event.getConnectionResult();
+			
+			if (result.getConnectionResultType() == ConnectionResultType.SUCCESS) {
+				playerId = result.getPlayerId();
+			} else {
+				throw new RuntimeException(String.format("Failed connecting to game: %s", result.getConnectionResultType()));
+			}
+		}
+		
+		if (event.getEventType() == EventType.GAME_STARTED) {
+			aiImplementation.init(event.getGame(), playerId);
+		}
+		
 		commandQueue.add(event);
 	}
 	

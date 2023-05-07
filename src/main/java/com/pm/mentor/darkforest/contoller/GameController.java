@@ -14,6 +14,8 @@ import com.loxon.javachallenge.challenge.game.rest.GameCreated;
 import com.loxon.javachallenge.challenge.game.rest.GameKey;
 import com.pm.mentor.darkforest.service.AIContainer;
 import com.pm.mentor.darkforest.service.GameHttpAdapter;
+import com.pm.mentor.darkforest.service.GameKeyRepository;
+import com.pm.mentor.darkforest.service.GameKeyRepository.TimeStampedString;
 import com.pm.mentor.darkforest.service.GameWebSocketAdapter;
 
 @RestController
@@ -23,20 +25,27 @@ public class GameController {
     private final GameWebSocketAdapter gameWebSocketAdapter;
     private final AIContainer container;
     private final ConnectionStateHolder connectionStateHolder;
+    private final GameKeyRepository gameKeyRepository;
 
     public GameController(GameHttpAdapter gameHttpAdapter,
     					  GameWebSocketAdapter gameWebSocketAdapter,
     					  AIContainer container,
-                          ConnectionStateHolder connectionStateHolder) {
+                          ConnectionStateHolder connectionStateHolder,
+                          GameKeyRepository gameKeyRepository) {
         this.gameHttpAdapter = gameHttpAdapter;
         this.gameWebSocketAdapter = gameWebSocketAdapter;
         this.container = container;
         this.connectionStateHolder = connectionStateHolder;
+        this.gameKeyRepository = gameKeyRepository;
     }
 
     @GetMapping("/getGameKey")
     public GameKey getGameKey() {
-        return gameHttpAdapter.getGameKey();
+        GameKey gameKey = gameHttpAdapter.getGameKey();
+        
+        gameKeyRepository.newGameKeyCreated(gameKey.getKey(), System.currentTimeMillis());
+        
+        return gameKey;
     }
 
     @PostMapping("/createGame/{gameKey}")
@@ -44,6 +53,7 @@ public class GameController {
         GameCreated result = gameHttpAdapter.createGame(gameKey, gameConfig);
         if (result != null) {
             connectionStateHolder.addConnection(new ConnectionState(gameKey, result.getGameId()));
+            gameKeyRepository.newGameCreated(result.getGameId(), System.currentTimeMillis());
         }
         
         container.create();
@@ -83,5 +93,13 @@ public class GameController {
         return "test";
     }
 
-
+    @GetMapping("/gameKeyHistory")
+    public List<TimeStampedString> getGameKeyHistory() {
+    	return gameKeyRepository.getAllGameKeys();
+    }
+    
+    @GetMapping("/gameIdHistory")
+    public List<TimeStampedString> getGameIdHistory() {
+    	return gameKeyRepository.getAllGameIds();
+    }
 }

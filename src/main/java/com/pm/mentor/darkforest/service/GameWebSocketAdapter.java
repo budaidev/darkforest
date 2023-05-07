@@ -64,6 +64,8 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 		val url = String.format("%s/game?gameId=%s&gameKey=%s&connectionType=control", RootUrl, gameId, gameKey);
 		WebSocketClient client = new StandardWebSocketClient();
 		clientSession = new ConcurrentWebSocketSessionDecorator(client.execute(this, url).get(), 10000, 1024*1024);
+		clientSession.setBinaryMessageSizeLimit(1024*1024);
+		clientSession.setTextMessageSizeLimit(1024*1024);
 	}
 
 	@SneakyThrows
@@ -90,11 +92,11 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 
 		String payload = (String)message.getPayload();
 
-		log.info(payload);
+		log.trace(payload);
 
 		GameEvent gameEvent = serializationService.readGameEvent(payload);
 
-		gameStateHolder.setMyObject(GameDtoMapper.toGameDto(gameEvent));
+		// gameStateHolder.setMyObject(GameDtoMapper.toGameDto(gameEvent));
 
 		aiContainer.receiveGameEvent(gameEvent);
 	}
@@ -108,7 +110,11 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) {
-		log.info("control connection closed");
+		if (closeStatus != CloseStatus.NORMAL) {
+			log.error(String.format("Control connection unexpedly closed with status code %d", closeStatus.getCode()));
+		} else {
+			log.info("Control connection closed");			
+		}
 	}
 
 	@Override
@@ -117,7 +123,7 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 	}
 
 	@Override
-	public int spaceMission(int sourcePlanet, int targetPlanet) {
+	public GameAction spaceMission(int sourcePlanet, int targetPlanet) {
 		val action = new SpaceMissionAction();
 
 		action.setOriginId(sourcePlanet);
@@ -127,7 +133,7 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 	}
 
 	@Override
-	public int spaceMissionWithWormHole(int sourcePlanet, int targetPlanet, int wormHole, EntryPointIndex wormHoleSide) {
+	public GameAction spaceMissionWithWormHole(int sourcePlanet, int targetPlanet, int wormHole, EntryPointIndex wormHoleSide) {
 		val action = new SpaceMissionAction();
 
 		action.setOriginId(sourcePlanet);
@@ -139,7 +145,7 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 	}
 
 	@Override
-	public int buildWormHole(int xa, int ya, int xb, int yb) {
+	public GameAction buildWormHole(int xa, int ya, int xb, int yb) {
 		val action = new BuildWormHoleAction();
 
 		action.setXa(xa);
@@ -151,7 +157,7 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 	}
 
 	@Override
-	public int erectShield(int targetPlanet) {
+	public GameAction erectShield(int targetPlanet) {
 		val action = new ErectShieldAction();
 
 		action.setTargetId(targetPlanet);
@@ -160,7 +166,7 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 	}
 
 	@Override
-	public int shootMBH(int sourcePlanet, int targetPlanet) {
+	public GameAction shootMBH(int sourcePlanet, int targetPlanet) {
 		val action = new ShootMBHAction();
 
 		action.setOriginId(sourcePlanet);
@@ -169,13 +175,13 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 		return setActionIdAndSend(action);
 	}
 
-	private int setActionIdAndSend(GameAction action) {
+	private GameAction setActionIdAndSend(GameAction action) {
 		val id = commandRefSequence.incrementAndGet();
 		action.setRefId(id);
 
 		send(action);
 
-		return id;
+		return action;
 	}
 
 	public void testUi(){

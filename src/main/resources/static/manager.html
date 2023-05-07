@@ -16,6 +16,7 @@
             display: flex;
             flex-direction: column;
         }
+
         button {
             background-color: #2BA3C1;
             border: none;
@@ -30,6 +31,7 @@
             cursor: pointer;
             min-width: 240px;
         }
+
         select {
             padding: 10px 20px;
             text-align: center;
@@ -49,6 +51,7 @@
             border-radius: 5px;
             border: 1px solid #ccc;
         }
+
         .planet {
             position: relative;
             border-radius: 50%;
@@ -117,51 +120,59 @@
 <h1>Game Control Panel</h1>
 
 <main>
-<div>
-    <button type="button" onclick="joinUiSocket()">Join websocket for UI</button>
-    <input type="text" id="txbConnectedToServer" readonly>
-</div>
+    <div>
+        <button type="button" onclick="joinUiSocket()">Join websocket for UI</button>
+        <input type="text" id="txbConnectedToServer" readonly>
+    </div>
 
-<div>
-    <button type="button" onclick="getGameKey()">Get Game Key</button>
-    <input type="text" id="txbGameKey" readonly>
-</div>
+    <div>
+        <button type="button" onclick="getGameKey()">Get Game Key</button>
+        <select id="selGameKey">
+        </select>
+    </div>
 
-<div>
-    <button type="button" onclick="createGame()">Create Game</button>
-    <select id="dropdownList">
-        <option value="SINGLE_PLAYER">SINGLE_PLAYER</option>
-        <option value="MULTI_PLAYER">MULTI_PLAYER</option>
-        <option value="QUALIFYING">QUALIFYING</option>
-    </select>
-    <input type="text" id="txbGameId" readonly>
-</div>
+    <div>
+        <button type="button" onclick="createGame()">Create Game</button>
+        <select id="dropdownList">
+            <option value="SINGLE_PLAYER">SINGLE_PLAYER</option>
+            <option value="MULTI_PLAYER">MULTI_PLAYER</option>
+            <option value="QUALIFYING">QUALIFYING</option>
+        </select>
+        <select id="selGameId">
+        </select>
+    </div>
 
-<div>
-    <button type="button" onclick="connectWebSocket()">Connect Control WebSocket</button>
-</div>
+    <div>
+        <button type="button" onclick="connectWebSocket()">Connect Control WebSocket</button>
+    </div>
 
-<div>
-    <button type="button" onclick="startGame()">Start Game</button>
-    <button type="button" onclick="stopGame()">Stop Game</button>
-</div>
+    <div>
+        <button type="button" onclick="startGame()">Start Game</button>
+        <button type="button" onclick="stopGame()">Stop Game</button>
+    </div>
 
     <div>
         <button type="button" onclick="getBots()">Get Bots</button>
         <button type="button" onclick="testUi()">Test</button>
     </div>
 
-
-
-<div id="container"></div>
+    <div id="container"></div>
 
 </main>
 
 
+<script type="text/javascript" src="js/dropdownlist.js"></script>
 <script type="text/javascript">
+
     const UrlRoot = 'http://localhost:8080';
     let currentGameKey = '';
     let currentGameId = '';
+
+    const gameKeySelector = new DropdownList("selGameKey", event => currentGameKey = event.target.value);
+    const gameIdSelector = new DropdownList("selGameId", event => currentGameId = event.target.value);
+
+    currentGameKey = gameKeySelector.selected;
+    currentGameId = gameIdSelector.selected;
 
     const joinUiSocket = async () => {
         // Create a new WebSocket connection to the server
@@ -195,9 +206,11 @@
     	const response = await fetch(`${UrlRoot}/getGameKey`);
 
     	currentGameKey = (await response.json()).key;
-    	
-    	const txbGameKey = document.getElementById('txbGameKey');
-    	txbGameKey.value = currentGameKey;
+
+        gameKeySelector.addAndSelectItem({
+            display: `${new Date().toISOString()} - ${currentGameKey}`,
+            value: currentGameKey
+        });
  	};
   
  	const createGame = async () => {
@@ -210,9 +223,9 @@
 	   		gameType: selectedType
  	    };
 
-         console.log('create game with config ' + gameConfig)
+        console.log('create game with config ' + gameConfig)
  	    
- 	    const response = await fetch(`${UrlRoot}/createGame/${encodeURIComponent(currentGameKey)}`, {
+ 	    const response = await fetch(`${UrlRoot}/createGame/${currentGameKey}`, {
  	    	method: 'POST',
  	    	headers: {
  	    	   'Content-Type': 'application/json',
@@ -225,8 +238,10 @@
  	    console.log(gameCreatedResult);
  	    currentGameId = gameCreatedResult.gameId;
  	    
- 	   const txbGameId = document.getElementById('txbGameId');
-       txbGameId.value = currentGameId;
+         gameIdSelector.addAndSelectItem({
+            display: `${new Date().toISOString()} - ${currentGameId}`,
+            value: currentGameKey
+        });
     };
   
     const connectWebSocket = async () => {
@@ -334,10 +349,28 @@
                 document.getElementById('container').appendChild(wormholeDiv);
             })
         }
-
     }
 
-    joinUiSocket();
+    const historyDropDownInitializer = async (endpointUrl, dropdown) => {
+        const response = await fetch(endpointUrl);
+
+        const items = (await response.json())
+            .map(x => {
+                return {
+                    display: `${new Date(x.createdAt).toISOString()} - ${x.value}`,
+                    value: x.value
+                };
+            });
+
+        items.sort((lhs, rhs) => -lhs.display.localeCompare(rhs.display))
+
+        dropdown.addItems(items);
+    };
+
+    historyDropDownInitializer(`${UrlRoot}/gameKeyHistory`, gameKeySelector);
+    historyDropDownInitializer(`${UrlRoot}/gameIdHistory`, gameIdSelector);
+
+    joinUiSocket();    
   
 </script>
 </body>

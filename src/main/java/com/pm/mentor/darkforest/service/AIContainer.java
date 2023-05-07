@@ -21,7 +21,7 @@ public class AIContainer {
 	
 	public void create() {
 		runner = new AIRunner();
-		runner.init(new SampleAI(), gameActionApi);
+		runner.init(new SampleAI(gameActionApi));
 		
 		scheduler.scheduleAtFixedRate(runner, 0, 50, TimeUnit.MILLISECONDS);
 	}
@@ -33,5 +33,13 @@ public class AIContainer {
 
 	public void attachGameActionApi(GameActionApi api) {
 		gameActionApi = api;
+	}
+	
+	public void shutDown() {
+		try {
+			scheduler.awaitTermination(5, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 }

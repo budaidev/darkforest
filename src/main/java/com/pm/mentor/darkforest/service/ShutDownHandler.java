@@ -14,16 +14,20 @@ public class ShutDownHandler implements DisposableBean {
 
     private final GameHttpAdapter gameHttpAdapter;
     private final ConnectionStateHolder connectionStateHolder;
+    private final AIContainer aiContainer;
 
-    public ShutDownHandler(GameHttpAdapter gameHttpAdapter, ConnectionStateHolder connectionStateHolder){
+    public ShutDownHandler(GameHttpAdapter gameHttpAdapter, ConnectionStateHolder connectionStateHolder, AIContainer aiContainer) {
         this.gameHttpAdapter = gameHttpAdapter;
         this.connectionStateHolder = connectionStateHolder;
+        this.aiContainer = aiContainer;
     }
 
     @Override
     public void destroy() throws Exception {
         // Code to run when application is shutting down
     	log.info("Application is shutting down...");
+    	
+    	aiContainer.shutDown();
 
         connectionStateHolder.getAllGames().forEach(System.out::println);
 
