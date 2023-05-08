@@ -234,16 +234,14 @@
  	    });
  	    
  	    const gameCreatedResult = await response.json();
- 	    
  	    console.log(gameCreatedResult);
 
+        currentGameId = gameCreatedResult.gameId;
  	    
-         gameIdSelector.addAndSelectItem({
+        gameIdSelector.addAndSelectItem({
             display: `${new Date().toISOString()} - ${currentGameId}`,
             value: currentGameId
         });
-
-        currentGameId = gameCreatedResult.gameId;
     };
   
     const connectWebSocket = async () => {
@@ -371,6 +369,7 @@
         items.sort((lhs, rhs) => -lhs.display.localeCompare(rhs.display))
 
         dropdown.addItems(items);
+        dropdown.selectFirstItem();
     };
 
     historyDropDownInitializer(`${UrlRoot}/gameKeyHistory`, gameKeySelector);

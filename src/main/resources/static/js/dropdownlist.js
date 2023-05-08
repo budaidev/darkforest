@@ -39,16 +39,25 @@ class DropdownList {
     addAndSelectItem(item) {
         const option = this.#createOption(item, true);
 
-        for (const item of this.#itemsList) {
-            item.selected = false;
-        }
+        this.#deselectItems();
 
         this.#itemsList.push(option);
         this.#container.appendChild(option);
 
-        container.value = option.value;
-        const changeEvent = new Event("change");
-        this.#container.dispatchEvent(changeEvent);
+        this.#setContainerValue(option.value);
+    }
+
+    /**
+     * @returns {void}
+     */
+    selectFirstItem() {
+        this.#deselectItems();
+        
+        if (this.#itemsList.some()) {
+            const firstItem = this.#itemsList[0];
+            firstItem.selected = true;
+            this.#setContainerValue(firstItem.value);
+        }
     }
 
     /**
@@ -63,5 +72,24 @@ class DropdownList {
         optionElement.selected = selected;
 
         return optionElement;
+    }
+
+    /**
+     * @param {string} value 
+     * @returns {void}
+     */
+    #setContainerValue(value) {
+        container.value = value;
+        const changeEvent = new Event("change");
+        this.#container.dispatchEvent(changeEvent);
+    }
+
+    /**
+     * @returns {void}
+     */
+    #deselectItems() {
+        for (const item of this.#itemsList) {
+            item.selected = false;
+        }
     }
 }

@@ -37,7 +37,12 @@ public class AIRunner implements Runnable {
 		
 		if (aiImplementation.isRunning()) {
 			val elapsed = System.currentTimeMillis() - timeStarted;
-			log.info("AI logic execution took: %d ms", elapsed);
+			
+			if (elapsed > 20) {
+				log.warn(String.format("AI logic execution took: %d ms", elapsed));
+			} else {
+				log.trace(String.format("AI logic execution took: %d ms", elapsed));
+			}
 		}
 	}
 

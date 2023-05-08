@@ -10,6 +10,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
@@ -134,14 +135,7 @@ public class GameHttpAdapter {
 	@SneakyThrows
 	private String readResponse(HttpURLConnection connection) {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
-			StringBuilder response = new StringBuilder();
-
-			String line;
-			while ((line = reader.readLine()) != null) {
-				response.append(line);
-			}
-
-			return response.toString();
+        	return reader.lines().collect(Collectors.joining());
         } catch (java.io.IOException e) {
         	log.warn("Dumping connection headers...");
         	
@@ -150,6 +144,11 @@ public class GameHttpAdapter {
         		val headerValue = String.join(", ", headerField.getValue());
         		
         		log.warn(String.format("%s: %s", headerName, headerValue));
+        	}
+        	
+        	log.warn("Dumping content...");
+        	try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()))) {
+    			log.warn(reader.lines().collect(Collectors.joining()));
         	}
         	
         	throw e;

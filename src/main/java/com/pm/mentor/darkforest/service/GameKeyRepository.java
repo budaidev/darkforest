@@ -63,7 +63,7 @@ public class GameKeyRepository {
 	@SneakyThrows
 	public List<TimeStampedGameKeyAndGameId> getAllCombined() {
 		try {
-			return Files.readAllLines(Paths.get(gameKeyHistoryFilePath))
+			return Files.readAllLines(Paths.get(combinedHistory))
 					.stream()
 					.map(line -> {
 						val items = line.split(" ");
