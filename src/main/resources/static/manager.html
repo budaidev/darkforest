@@ -240,7 +240,7 @@
  	    
          gameIdSelector.addAndSelectItem({
             display: `${new Date().toISOString()} - ${currentGameId}`,
-            value: currentGameKey
+            value: currentGameId
         });
 
         currentGameId = gameCreatedResult.gameId;
@@ -353,6 +353,10 @@
         }
     }
 
+    /**
+     * @param {string} endpointUrl
+     * @param {DropdownList} dropdown
+     */
     const historyDropDownInitializer = async (endpointUrl, dropdown) => {
         const response = await fetch(endpointUrl);
 
