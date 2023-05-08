@@ -34,6 +34,10 @@ public class AIContainer {
 	public void attachGameActionApi(GameActionApi api) {
 		gameActionApi = api;
 	}
+
+	public boolean isCreated() {
+		return runner != null;
+	}
 	
 	public void shutDown() {
 		try {

@@ -17,6 +17,7 @@ public class GameKeyRepository {
 
 	private final String gameKeyHistoryFilePath = "gameKeyHistory.txt";
 	private final String gameIdHistoryFilePath = "gameIdHistory.txt";
+	private final String combinedHistory = "gameKeyWithIdHistory.txt";
 	
 	@SneakyThrows
 	public void newGameKeyCreated(String gameKey, long createdAt) {
@@ -24,8 +25,9 @@ public class GameKeyRepository {
 	}
 	
 	@SneakyThrows
-	public void newGameCreated(String gameId, long createdAt) {
+	public void newGameCreated(String gameKey, String gameId, long createdAt) {
 		Files.write(Paths.get(gameIdHistoryFilePath), String.format("%d %s\n", createdAt, gameId).getBytes(), StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+		Files.write(Paths.get(combinedHistory), String.format("%d %s %s\n", createdAt, gameKey, gameId).getBytes(), StandardOpenOption.APPEND, StandardOpenOption.CREATE);
 	}
 	
 	@SneakyThrows
@@ -57,10 +59,32 @@ public class GameKeyRepository {
 			return List.of();
 		}
 	}
+
+	@SneakyThrows
+	public List<TimeStampedGameKeyAndGameId> getAllCombined() {
+		try {
+			return Files.readAllLines(Paths.get(gameKeyHistoryFilePath))
+					.stream()
+					.map(line -> {
+						val items = line.split(" ");
+						return new TimeStampedGameKeyAndGameId(Long.parseLong(items[0]), items[1], items[2]);
+					})
+					.collect(Collectors.toList());
+		} catch (java.nio.file.NoSuchFileException e) {
+			return List.of();
+		}
+	}
 	
 	@Value
 	public class TimeStampedString {
 		private final long createdAt;
 		private final String value;
+	}
+
+	@Value
+	public class TimeStampedGameKeyAndGameId {
+		private final long createdAt;
+		private final String gameKey;
+		private final String gameId;
 	}
 }

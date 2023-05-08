@@ -236,12 +236,14 @@
  	    const gameCreatedResult = await response.json();
  	    
  	    console.log(gameCreatedResult);
- 	    currentGameId = gameCreatedResult.gameId;
+
  	    
          gameIdSelector.addAndSelectItem({
             display: `${new Date().toISOString()} - ${currentGameId}`,
             value: currentGameKey
         });
+
+        currentGameId = gameCreatedResult.gameId;
     };
   
     const connectWebSocket = async () => {

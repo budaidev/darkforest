@@ -62,6 +62,7 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 	@SneakyThrows
 	public void connect(String gameId, String gameKey) {
 		val url = String.format("%s/game?gameId=%s&gameKey=%s&connectionType=control", RootUrl, gameId, gameKey);
+		log.info("Connecting to {}", url);
 		WebSocketClient client = new StandardWebSocketClient();
 		clientSession = new ConcurrentWebSocketSessionDecorator(client.execute(this, url).get(), 10000, 1024*1024);
 		clientSession.setBinaryMessageSizeLimit(1024*1024);
@@ -96,7 +97,7 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 
 		GameEvent gameEvent = serializationService.readGameEvent(payload);
 
-		// gameStateHolder.setMyObject(GameDtoMapper.toGameDto(gameEvent));
+		gameStateHolder.setMyObject(GameDtoMapper.toGameDto(gameEvent));
 
 		aiContainer.receiveGameEvent(gameEvent);
 	}
@@ -113,7 +114,7 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 		if (closeStatus != CloseStatus.NORMAL) {
 			log.error(String.format("Control connection unexpedly closed with status code %d", closeStatus.getCode()));
 		} else {
-			log.info("Control connection closed");			
+			log.info("Control connection closed");
 		}
 	}
 

@@ -6,13 +6,17 @@ import java.util.List;
 import com.loxon.javachallenge.challenge.game.rest.GameType;
 import com.loxon.javachallenge.challenge.game.settings.GameSettings;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * A játékmechanikához szükséges mezőket tárolja.
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class Game {
     /**

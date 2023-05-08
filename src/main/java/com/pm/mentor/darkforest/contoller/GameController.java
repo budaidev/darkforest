@@ -2,6 +2,7 @@ package com.pm.mentor.darkforest.contoller;
 
 import java.util.List;
 
+import java.util.stream.Collectors;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,8 +29,8 @@ public class GameController {
     private final GameKeyRepository gameKeyRepository;
 
     public GameController(GameHttpAdapter gameHttpAdapter,
-    					  GameWebSocketAdapter gameWebSocketAdapter,
-    					  AIContainer container,
+                          GameWebSocketAdapter gameWebSocketAdapter,
+                          AIContainer container,
                           ConnectionStateHolder connectionStateHolder,
                           GameKeyRepository gameKeyRepository) {
         this.gameHttpAdapter = gameHttpAdapter;
@@ -53,7 +54,7 @@ public class GameController {
         GameCreated result = gameHttpAdapter.createGame(gameKey, gameConfig);
         if (result != null) {
             connectionStateHolder.addConnection(new ConnectionState(gameKey, result.getGameId()));
-            gameKeyRepository.newGameCreated(result.getGameId(), System.currentTimeMillis());
+            gameKeyRepository.newGameCreated(gameKey, result.getGameId(), System.currentTimeMillis());
         }
         
         container.create();
@@ -63,7 +64,10 @@ public class GameController {
     
     @GetMapping("/connect/{gameId}/{gameKey}")
     public void connectControlWebSocket(@PathVariable String gameId, @PathVariable String gameKey) {
-    	gameWebSocketAdapter.connect(gameId, gameKey);
+        if(!container.isCreated()){
+            container.create();
+        }
+        gameWebSocketAdapter.connect(gameId, gameKey);
         connectionStateHolder.getConnection(gameId, gameKey).ifPresent(x -> x.setConnected(true));
     }
 
@@ -81,6 +85,18 @@ public class GameController {
         return gameHttpAdapter.stopGame(gameId, gameKey);
     }
 
+    @GetMapping("/stopAllGames")
+    public void stopAllGames() throws InterruptedException {
+        for(GameKeyRepository.TimeStampedGameKeyAndGameId gameKeyAndGameId : gameKeyRepository.getAllCombined()) {
+            try {
+                stopGame(gameKeyAndGameId.getGameId(), gameKeyAndGameId.getGameKey());
+                Thread.sleep(500);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     @GetMapping("/bots")
     public List<BotDefinition> getBots() {
         return gameHttpAdapter.getBots();
@@ -95,11 +111,11 @@ public class GameController {
 
     @GetMapping("/gameKeyHistory")
     public List<TimeStampedString> getGameKeyHistory() {
-    	return gameKeyRepository.getAllGameKeys();
+            return gameKeyRepository.getAllGameKeys();
     }
     
     @GetMapping("/gameIdHistory")
     public List<TimeStampedString> getGameIdHistory() {
-    	return gameKeyRepository.getAllGameIds();
+            return gameKeyRepository.getAllGameIds();
     }
 }
