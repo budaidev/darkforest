@@ -53,7 +53,7 @@ class DropdownList {
     selectFirstItem() {
         this.#deselectItems();
         
-        if (this.#itemsList.some()) {
+        if (this.#itemsList.length > 0) {
             const firstItem = this.#itemsList[0];
             firstItem.selected = true;
             this.#setContainerValue(firstItem.value);

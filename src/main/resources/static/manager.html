@@ -161,18 +161,17 @@
 </main>
 
 
+<script type="text/javascript" src="js/game-manager.js"></script>
 <script type="text/javascript" src="js/dropdownlist.js"></script>
 <script type="text/javascript">
 
-    const UrlRoot = 'http://localhost:8080';
-    let currentGameKey = '';
-    let currentGameId = '';
+    const gameManager = new GameManager();
 
-    const gameKeySelector = new DropdownList("selGameKey", event => currentGameKey = event.target.value);
-    const gameIdSelector = new DropdownList("selGameId", event => currentGameId = event.target.value);
+    const gameKeySelector = new DropdownList("selGameKey", event => gameManager.currentGameKey = event.target.value);
+    const gameIdSelector = new DropdownList("selGameId", event => gameManager.currentGameId = event.target.value);
 
-    currentGameKey = gameKeySelector.selected;
-    currentGameId = gameIdSelector.selected;
+    gameManager.currentGameKey = gameKeySelector.selected;
+    gameManager.currentGameId = gameIdSelector.selected;
 
     const joinUiSocket = async () => {
         // Create a new WebSocket connection to the server
@@ -203,13 +202,11 @@
     }
   
     const getGameKey = async () => {
-    	const response = await fetch(`${UrlRoot}/getGameKey`);
-
-    	currentGameKey = (await response.json()).key;
+    	const response = await gameManager.getGameKey();
 
         gameKeySelector.addAndSelectItem({
-            display: `${new Date().toISOString()} - ${currentGameKey}`,
-            value: currentGameKey
+            display: `${new Date().toISOString()} - ${response}`,
+            value: response
         });
  	};
   
@@ -218,56 +215,33 @@
         const dropdownList = document.getElementById("dropdownList");
         const selectedType = dropdownList.value;
 
- 	    const gameConfig = {
-	   		bots: [1],
-	   		gameType: selectedType
- 	    };
-
-        console.log('create game with config ' + gameConfig)
- 	    
- 	    const response = await fetch(`${UrlRoot}/createGame/${currentGameKey}`, {
- 	    	method: 'POST',
- 	    	headers: {
- 	    	   'Content-Type': 'application/json',
-    	    },
- 	    	body: JSON.stringify(gameConfig)
- 	    });
- 	    
- 	    const gameCreatedResult = await response.json();
- 	    console.log(gameCreatedResult);
-
-        currentGameId = gameCreatedResult.gameId;
+ 	    const gameConfig = new GameConfig([1], selectedType);
+        const response = await gameManager.createGame(gameConfig);
  	    
         gameIdSelector.addAndSelectItem({
-            display: `${new Date().toISOString()} - ${currentGameId}`,
-            value: currentGameId
+            display: `${new Date().toISOString()} - ${response}`,
+            value: response
         });
     };
   
     const connectWebSocket = async () => {
-    	const response = await fetch(`${UrlRoot}/connect/${currentGameId}/${currentGameKey}`);
+    	await gameManager.connectWebSocket();
     };
   
     const startGame = async () => {
-    	const response = await fetch(`${UrlRoot}/startGame/${currentGameId}/${currentGameKey}`);
-    	
-    	console.log(await response.json());
+    	await gameManager.startGame();
     };
   
     const stopGame = async () => {
-    	const response = await fetch(`${UrlRoot}/stopGame/${currentGameId}/${currentGameKey}`);
-    	
-    	console.log(await response.json());
+    	await gameManager.stopGame();
     };
 
     const getBots = async () => {
-        const response = await fetch(`${UrlRoot}/bots`);
-
-        console.log(await response.json());
+        await gameManager.getBots();
     };
 
     const testUi = async () => {
-        const response = await fetch(`${UrlRoot}/test`);
+        const response = await fetch(`${GameManager.UrlRoot}/test`);
     };
 
     const drawUi = async (jsonConfig) => {
@@ -372,8 +346,8 @@
         dropdown.selectFirstItem();
     };
 
-    historyDropDownInitializer(`${UrlRoot}/gameKeyHistory`, gameKeySelector);
-    historyDropDownInitializer(`${UrlRoot}/gameIdHistory`, gameIdSelector);
+    historyDropDownInitializer(`${GameManager.UrlRoot}/gameKeyHistory`, gameKeySelector);
+    historyDropDownInitializer(`${GameManager.UrlRoot}/gameIdHistory`, gameIdSelector);
 
     joinUiSocket();    
   
