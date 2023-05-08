@@ -2,6 +2,7 @@ package com.pm.mentor.darkforest.service;
 
 import com.loxon.javachallenge.challenge.game.rest.BotDefinition;
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
@@ -151,6 +152,21 @@ public class GameHttpAdapter {
         		
         		log.warn(String.format("%s: %s", headerName, headerValue));
         	}
+
+			InputStream errorStream = connection.getErrorStream();
+			if (errorStream != null) {
+				try (BufferedReader reader = new BufferedReader(new InputStreamReader(errorStream))) {
+					StringBuilder response = new StringBuilder();
+
+					String line;
+					while ((line = reader.readLine()) != null) {
+						response.append(line);
+					}
+
+					log.warn("Error response: " + response.toString());
+				}
+			}
+
         	
         	throw e;
         }

@@ -19,8 +19,13 @@ public class GameStateHolder {
         return myObject;
     }
 
-    public void setMyObject(GameDto myObject) {
+    public void  setMyObject(GameDto myObject) {
         this.myObject = myObject;
+        eventPublisher.publishEvent(new GameStateChangeEvent(this, myObject));
+    }
+
+    public void setConnectionStatus(String connectionStatus) {
+        this.myObject.setConnectionStatus(connectionStatus);
         eventPublisher.publishEvent(new GameStateChangeEvent(this, myObject));
     }
 }
