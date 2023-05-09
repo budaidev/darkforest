@@ -164,6 +164,7 @@ public class GameHttpAdapter {
 					}
 
 					log.warn("Error response: " + response.toString());
+					return response.toString();
 				}
 			}
 

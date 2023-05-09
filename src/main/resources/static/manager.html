@@ -299,6 +299,35 @@
         document.getElementById('container').appendChild(planetDiv);
     }
 
+    const drawLine = (x, y, len, angleRad) => {
+        let container = document.getElementById('container');
+        // Convert angle from degrees to radians
+        // Calculate the end point of the line
+        const endX = x + len * Math.cos(angleRad);
+        const endY = y + len * Math.sin(angleRad);
+
+        // Create a new div element to represent the line
+        const line = document.createElement("div");
+
+        // Set the position and dimensions of the line
+        line.style.position = "absolute";
+        line.style.top = y + "px";
+        line.style.left = x + "px";
+        line.style.width = len + "px";
+        line.style.height = "0px";
+
+        // Apply a border to the line to represent the stroke
+        line.style.borderTop = "1px solid black";
+
+        // Rotate the line to match the angle
+        line.style.transform = `rotate(${angleRad + Math.PI/2}rad)`;
+
+        // Add the line to the DOM
+        container.appendChild(line);
+    }
+
+
+
     const drawUi = async (jsonConfig) => {
 
         let scale = 5;
@@ -319,44 +348,54 @@
 
         }
 
+        if (jsonConfig.eventType === 'ACTION_EFFECT') {
+            let actionEffect = jsonConfig.actionEffect;
+            let p = document.getElementById('planet' + actionEffect.id)
+            console.log(p.style.left, p.style.top, scale*10, actionEffect.dir)
 
-        // Create the planets
-        jsonConfig.planets.forEach((planet) => {
-            let p = document.getElementById('planet' + planet.id)
-            if(p==null){
-                createPlanet(planet, scale);
-            } else {
-                p.style.backgroundColor = colors[playerDict[planet.player]];
-                p.firstChild.innerHTML = '<strong>' + planet.id + '</strong><br>'
-                    + planet.x + ', ' + planet.y + '<br>';
+            drawLine(parseInt(p.style.left), parseInt(p.style.top), scale*10, actionEffect.dir);
+
+        } else {
+
+
+            // Create the planets
+            jsonConfig.planets.forEach((planet) => {
+                let p = document.getElementById('planet' + planet.id)
+                if(p==null){
+                    createPlanet(planet, scale);
+                } else {
+                    p.style.backgroundColor = colors[playerDict[planet.player]];
+                    p.firstChild.innerHTML = '<strong>' + planet.id + '</strong><br>'
+                        + planet.x + ', ' + planet.y + '<br>';
+                }
+
+            });
+
+            // Create the wormholes
+            if (jsonConfig.wormholes) {
+                jsonConfig.wormholes.forEach((wormhole) => {
+
+                    const dy = wormhole.x2 - wormhole.x1;
+                    const dx = wormhole.y2 - wormhole.y1;
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+
+                    const wormholeDiv = document.createElement('div');
+                    wormholeDiv.className = 'wormhole';
+                    wormholeDiv.style.width = length + 'px';
+                    wormholeDiv.style.left = wormhole.x1 + 'px';
+                    wormholeDiv.style.top = wormhole.y1 - 5 + 'px';
+                    wormholeDiv.style.transform = 'rotate(' + angle + 'deg)';
+                    wormholeDiv.style.backgroundColor = wormhole.color;
+
+                    const wormholePopup = document.createElement('div');
+                    wormholePopup.className = 'wormhole-popup';
+                    wormholePopup.innerHTML = '<strong>' + wormhole.name + '</strong><br>' + wormhole.info;
+
+                    wormholeDiv.appendChild(wormholePopup);
+                    document.getElementById('container').appendChild(wormholeDiv);
+                })
             }
-
-        });
-
-        // Create the wormholes
-        if (jsonConfig.wormholes) {
-            jsonConfig.wormholes.forEach((wormhole) => {
-
-                const dy = wormhole.x2 - wormhole.x1;
-                const dx = wormhole.y2 - wormhole.y1;
-                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-                const length = Math.sqrt(dx * dx + dy * dy);
-
-                const wormholeDiv = document.createElement('div');
-                wormholeDiv.className = 'wormhole';
-                wormholeDiv.style.width = length + 'px';
-                wormholeDiv.style.left = wormhole.x1 + 'px';
-                wormholeDiv.style.top = wormhole.y1 - 5 + 'px';
-                wormholeDiv.style.transform = 'rotate(' + angle + 'deg)';
-                wormholeDiv.style.backgroundColor = wormhole.color;
-
-                const wormholePopup = document.createElement('div');
-                wormholePopup.className = 'wormhole-popup';
-                wormholePopup.innerHTML = '<strong>' + wormhole.name + '</strong><br>' + wormhole.info;
-
-                wormholeDiv.appendChild(wormholePopup);
-                document.getElementById('container').appendChild(wormholeDiv);
-            })
         }
     }
 

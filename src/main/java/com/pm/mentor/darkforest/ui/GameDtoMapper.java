@@ -12,6 +12,9 @@ public class GameDtoMapper {
         if(gameEvent.getEventType() == EventType.GAME_STARTED) {
             gameDto.setPlayers(gameEvent.getGame().getPlayers());
         }
+        if(gameEvent.getEventType() == EventType.ACTION_EFFECT) {
+            gameDto.setActionEffect(gameEvent.getActionEffect());
+        }
         if(gameEvent.getGame() != null) {
             gameDto.setPlanets(gameEvent.getGame().getWorld().getPlanets());
             gameDto.setWormHoles(gameEvent.getGame().getWorld().getWormHoles());

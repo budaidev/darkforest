@@ -2,6 +2,7 @@ package com.pm.mentor.darkforest.ui.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.loxon.javachallenge.challenge.game.event.EventType;
+import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffect;
 import com.loxon.javachallenge.challenge.game.model.Planet;
 import com.loxon.javachallenge.challenge.game.model.Player;
 import com.loxon.javachallenge.challenge.game.model.WormHole;
@@ -17,6 +18,8 @@ public class GameDto {
     private List<Player> players = new ArrayList<>();
 
     private EventType eventType;
+
+    private ActionEffect actionEffect;
 
     private long width;
     /**
