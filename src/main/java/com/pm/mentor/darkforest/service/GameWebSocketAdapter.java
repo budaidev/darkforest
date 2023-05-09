@@ -148,7 +148,7 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 	}
 
 	@Override
-	public GameAction buildWormHole(int xa, int ya, int xb, int yb) {
+	public GameAction buildWormHole(long xa, long ya, long xb, long yb) {
 		val action = new BuildWormHoleAction();
 
 		action.setXa(xa);

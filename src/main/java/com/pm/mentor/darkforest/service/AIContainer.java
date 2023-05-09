@@ -1,9 +1,12 @@
 package com.pm.mentor.darkforest.service;
 
+import com.pm.mentor.darkforest.ai.AI;
+import com.pm.mentor.darkforest.ai.manual.ManualAI;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.loxon.javachallenge.challenge.game.event.GameEvent;
@@ -18,10 +21,18 @@ public class AIContainer {
 	private AIRunner runner;
 	
 	private GameActionApi gameActionApi;
+
+	private ManualAI ai;
+
+	public AIContainer(ManualAI ai) {
+		this.ai = ai;
+	}
 	
 	public void create() {
 		runner = new AIRunner();
-		runner.init(new SampleAI(gameActionApi));
+		ai.init(gameActionApi);
+		runner.init(ai);
+
 		
 		scheduler.scheduleAtFixedRate(runner, 0, 50, TimeUnit.MILLISECONDS);
 	}

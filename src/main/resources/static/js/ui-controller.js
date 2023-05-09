@@ -262,7 +262,7 @@ class UIController {
      * @returns {HTMLDivElement}
      */
     #renderWormholes(wormholes) {
-        wormholes.forEach(wormhole => {
+        for (const wormhole of wormholes) {
 
             const dx = wormhole.x2 - wormhole.x1;
             const dy = wormhole.y2 - wormhole.y1;
@@ -283,7 +283,7 @@ class UIController {
 
             wormholeDiv.appendChild(wormholePopup);
             document.getElementById('container').appendChild(wormholeDiv);
-        })
+        }
     }
 
     #drawLine(x, y, len, angleRad) {
