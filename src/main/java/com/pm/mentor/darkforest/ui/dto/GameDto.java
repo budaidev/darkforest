@@ -1,7 +1,10 @@
 package com.pm.mentor.darkforest.ui.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.loxon.javachallenge.challenge.game.event.EventType;
+import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffect;
 import com.loxon.javachallenge.challenge.game.model.Planet;
+import com.loxon.javachallenge.challenge.game.model.Player;
 import com.loxon.javachallenge.challenge.game.model.WormHole;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +14,12 @@ import lombok.Data;
 public class GameDto {
 
     private String connectionStatus = "Not connected";
+
+    private List<Player> players = new ArrayList<>();
+
+    private EventType eventType;
+
+    private ActionEffect actionEffect;
 
     private long width;
     /**
