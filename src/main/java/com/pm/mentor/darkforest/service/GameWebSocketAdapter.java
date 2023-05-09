@@ -86,6 +86,7 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) {
 		log.info("control connection established");
+		gameStateHolder.setConnectionStatus("connected");
 	}
 
 	@Override
@@ -93,7 +94,7 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 
 		String payload = (String)message.getPayload();
 
-		log.trace(payload);
+		log.info(payload);
 
 		GameEvent gameEvent = serializationService.readGameEvent(payload);
 
@@ -116,6 +117,7 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 		} else {
 			log.info("Control connection closed");
 		}
+		gameStateHolder.setConnectionStatus("disconnected");
 	}
 
 	@Override
