@@ -81,9 +81,11 @@ public class GameController {
     @GetMapping("/connect/{gameId}/{gameKey}")
     public void connectControlWebSocket(@PathVariable String gameId, @PathVariable String gameKey) {
         log.info("Connecting to game: " + gameId + " with key: " + gameKey);
-        if(!container.isCreated()){
-            container.create();
+
+        if (!container.isCreated()) {
+            // container.create();
         }
+
         gameWebSocketAdapter.connect(gameId, gameKey);
         connectionStateHolder.getConnection(gameId, gameKey).ifPresent(x -> x.setConnected(true));
     }

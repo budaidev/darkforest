@@ -2,13 +2,16 @@ package com.pm.mentor.darkforest.service;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.stereotype.Component;
 
 import com.loxon.javachallenge.challenge.game.event.GameEvent;
+import com.pm.mentor.darkforest.ai.AI;
 import com.pm.mentor.darkforest.ai.AIRunner;
 import com.pm.mentor.darkforest.ai.GameActionApi;
+import com.pm.mentor.darkforest.ai.SampleAI;
 import com.pm.mentor.darkforest.ai.manual.ManualAI;
 
 @Component
@@ -16,22 +19,27 @@ public class AIContainer {
 	
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 	private AIRunner runner;
+	private ScheduledFuture<?> scheduledTask;
 	
 	private GameActionApi gameActionApi;
 
-	private ManualAI ai;
+	private AI ai;
 
 	public AIContainer(ManualAI ai) {
 		this.ai = ai;
 	}
 	
 	public void create() {
-		runner = new AIRunner();
-		ai.init(gameActionApi);
-		runner.init(ai);
+		if (scheduledTask != null && !scheduledTask.isDone()) {
+			scheduledTask.cancel(true);
+		}
 
+		runner = new AIRunner();
+		ai = new SampleAI(gameActionApi);
+		// ai.init(gameActionApi);
+		runner.init(ai);
 		
-		scheduler.scheduleAtFixedRate(runner, 0, 50, TimeUnit.MILLISECONDS);
+		scheduledTask = scheduler.scheduleAtFixedRate(runner, 0, 1000, TimeUnit.MILLISECONDS);
 	}
 	
 	public void receiveGameEvent(GameEvent event) {
@@ -47,11 +55,11 @@ public class AIContainer {
 		return runner != null;
 	}
 	
-	public void shutDown() {
-		try {
-			scheduler.awaitTermination(5, TimeUnit.SECONDS);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+	public void shutdown() {
+		if (scheduledTask != null && !scheduledTask.isDone()) {
+			scheduledTask.cancel(true);
 		}
+		
+		scheduler.shutdown();
 	}
 }

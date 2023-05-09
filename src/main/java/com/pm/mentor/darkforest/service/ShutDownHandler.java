@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 
 import com.pm.mentor.darkforest.contoller.ConnectionState;
 import com.pm.mentor.darkforest.contoller.ConnectionStateHolder;
+import com.pm.mentor.darkforest.ui.PlanetWebSocketHandler;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,11 +16,19 @@ public class ShutDownHandler implements DisposableBean {
     private final GameHttpAdapter gameHttpAdapter;
     private final ConnectionStateHolder connectionStateHolder;
     private final AIContainer aiContainer;
+    private final GameWebSocketAdapter gameWebSocketAdapter;
+    private final PlanetWebSocketHandler planetWebSocketHandler;
 
-    public ShutDownHandler(GameHttpAdapter gameHttpAdapter, ConnectionStateHolder connectionStateHolder, AIContainer aiContainer) {
+    public ShutDownHandler(GameHttpAdapter gameHttpAdapter, 
+    		ConnectionStateHolder connectionStateHolder, 
+    		AIContainer aiContainer, 
+    		GameWebSocketAdapter gameWebSocketAdapter,
+    		PlanetWebSocketHandler planetWebSocketHandler) {
         this.gameHttpAdapter = gameHttpAdapter;
         this.connectionStateHolder = connectionStateHolder;
         this.aiContainer = aiContainer;
+        this.gameWebSocketAdapter = gameWebSocketAdapter;
+        this.planetWebSocketHandler = planetWebSocketHandler;
     }
 
     @Override
@@ -27,7 +36,9 @@ public class ShutDownHandler implements DisposableBean {
         // Code to run when application is shutting down
     	log.info("Application is shutting down...");
     	
-    	aiContainer.shutDown();
+    	aiContainer.shutdown();
+    	gameWebSocketAdapter.shutdown();
+    	planetWebSocketHandler.shutdown();
 
         connectionStateHolder.getAllGames().forEach(System.out::println);
 

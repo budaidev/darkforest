@@ -70,6 +70,6 @@ public class AIRunner implements Runnable {
 	
 	private boolean shouldSendHeartBeat() {
 		// send a heart beat to the AI if last execution was more than 45ms ago
-		return lastExecution - System.currentTimeMillis() >= 45;
+		return System.currentTimeMillis() - lastExecution >= 45;
 	}
 }

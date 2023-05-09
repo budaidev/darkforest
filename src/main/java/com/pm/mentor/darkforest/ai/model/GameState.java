@@ -1,6 +1,8 @@
 package com.pm.mentor.darkforest.ai.model;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.loxon.javachallenge.challenge.game.model.Game;
 import com.loxon.javachallenge.challenge.game.model.Planet;
@@ -19,5 +21,49 @@ public class GameState {
 		this.playerId = playerId;
 		settings = game.getSettings();
 		planets = game.getWorld().getPlanets();
+	}
+	
+	public int getMaxConcurrentActionCount() {
+		return settings.getMaxConcurrentActions();
+	}
+	
+	public List<Planet> getPlayerPlanets() {
+		return planets.stream()
+			.filter(p -> p.getPlayer() == playerId)
+			.collect(Collectors.toList());
+	}
+	
+	public List<Planet> getUnknownPlanets() {
+		return planets.stream()
+			.filter(p -> p.getPlayer() == 0 && p.isDestroyed() == false)
+			.collect(Collectors.toList());
+	}
+	
+	public List<Planet> getUnknownPlanets(Comparator<? super Planet> comparator) {
+		return planets.stream()
+			.filter(p -> p.getPlayer() == 0 && p.isDestroyed() == false)
+			.sorted(comparator)
+			.collect(Collectors.toList());
+	}
+
+	public void spaceMissionSuccessful(int affectedMapObjectId) {
+		planets.stream()
+			.filter(p -> p.getId() == affectedMapObjectId)
+			.findFirst()
+			.ifPresent(p -> {
+				p.setClassM(true);
+				p.setPlayer(playerId);
+			});
+	}
+
+	public void spaceMissionFailed(int affectedMapObjectId) {
+		planets.stream()
+			.filter(p -> p.getId() == affectedMapObjectId)
+			.findFirst()
+			.ifPresent(p -> {
+				// mark the planet as destroyed and inhabitable, however it can still be owned by an other player!
+				p.setClassM(false);
+				p.setDestroyed(true);
+			});
 	}
 }

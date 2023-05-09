@@ -2,12 +2,20 @@ package com.pm.mentor.darkforest.ai;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import com.loxon.javachallenge.challenge.game.event.GameEvent;
+import com.loxon.javachallenge.challenge.game.event.action.ActionResponse;
 import com.loxon.javachallenge.challenge.game.event.action.ActionResult;
 import com.loxon.javachallenge.challenge.game.event.action.EntryPointIndex;
 import com.loxon.javachallenge.challenge.game.event.action.GameAction;
+import com.loxon.javachallenge.challenge.game.event.action.GameActionType;
+import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffect;
+import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffectType;
 import com.loxon.javachallenge.challenge.game.model.Game;
+import com.loxon.javachallenge.challenge.game.model.Planet;
 import com.pm.mentor.darkforest.ai.model.GameState;
 
 import lombok.Getter;
@@ -20,7 +28,9 @@ public class SampleAI implements AI {
 	private final GameActionApi actionApi;
 	private GameState gameState;
 	private Map<Integer, GameAction> initiatedActions = new HashMap<>();
-	private Map<Integer, GameAction> activeActions = new HashMap<>();
+	private Map<Integer, ActionResponse> activeActions = new HashMap<>();
+	
+	private AtomicInteger actionCounter = new AtomicInteger(0);
 	
 	@Getter
 	private boolean running = false;
@@ -31,6 +41,7 @@ public class SampleAI implements AI {
 	
 	@Override
 	public void init(Game game, int playerId) {
+		log.info("AI initialized");
 		gameState = new GameState(game, playerId);
 		
 		running = true;
@@ -38,6 +49,8 @@ public class SampleAI implements AI {
 
 	@Override
 	public void receiveEvent(GameEvent event) {
+		log.trace(String.format("AI received a game event: %s", event.getEventType()));
+
 		switch (event.getEventType()) {
 		case ACTION:
 			val actionResponse = event.getAction();
@@ -55,7 +68,7 @@ public class SampleAI implements AI {
 			
 			// add to active actions list
 			if (actionResponse.getResult() == ActionResult.SUCCESS) {
-				activeActions.put(action.getRefId(), action);
+				activeActions.put(action.getRefId(), actionResponse);
 			}  else {
 				log.warn(String.format("Cannot execute action: %s", actionResponse.toString()));
 			}
@@ -68,27 +81,186 @@ public class SampleAI implements AI {
 			break;
 
 		case ACTION_EFFECT:
-			log.info(String.format("ActionEffect received: %s", event.getActionEffect().toString()));
+			val actionEffect = event.getActionEffect();
+
+			log.info(String.format("ActionEffect received: %s", actionEffect.toString()));
+			
+			if (isEffectPlayerRelated(actionEffect) ) {
+				val originalAction = tryFindOriginalPlayerAction(actionEffect);
+				
+				originalAction.ifPresent(origAction -> handleActionFallout(origAction, actionEffect));
+			}
 			
 			break;
 		case ATTRIBUTE_CHANGE:
 			log.info(String.format("AttributeChange received: %s", event.getChanges().toString()));
+			
+			handleAttributeChange(event);
 			
 			break;
 		case GAME_ENDED:
 			running = false;
 			break;
 		}
+		
+		doStuff();
 	}
 
 	@Override
 	public void heartBeat() {
+		log.trace("AI received a heartbeat");
 		if (!running) {
 			return;
 		}
 		
-		// TODO Auto-generated method stub
+		doStuff();
+	}
+	
+	private void doStuff() {
+		log.trace("dostuff");
+
+		if (!hasFreeAction()) {
+			log.trace(String.format("No free actions. Used %d of %d", activeActionCount(), gameState.getMaxConcurrentActionCount()));
+			
+			return;
+		}
 		
+		sendMissionsToNearbyPlanets();
+	}
+	
+	private void sendMissionsToNearbyPlanets() {
+		log.trace("sendMissionsToNearbyPlanets");
+		
+		val playerPlanets = gameState.getPlayerPlanets();
+		log.trace(String.format("number of player planets: %d", playerPlanets.size()));
+		val closestUnknownPlanets = gameState.getUnknownPlanets((Planet lhs, Planet rhs) -> {
+			// calculate distance to closest player planet
+			val leftDistance = playerPlanets.stream()
+				.mapToInt(p -> (int)p.distance(lhs))
+				.min();
+			
+			val rightDistance = playerPlanets.stream()
+				.mapToInt(p -> (int)p.distance(rhs))
+				.min();
+			
+			if (leftDistance.isPresent() && rightDistance.isPresent()) {
+				return leftDistance.getAsInt() - rightDistance.getAsInt();
+			}
+			
+			return 0;
+		});
+		
+		log.trace(String.format("Number of unknown planets: %d", closestUnknownPlanets.size()));
+		
+		if (closestUnknownPlanets.size() > 0) {
+			val targetPlanets = closestUnknownPlanets.stream()
+				.limit(availableActionCount())
+				.collect(Collectors.toList());
+			
+			log.trace(String.format("Selected %d planets as mission targets", targetPlanets.size()));
+			
+			for (val target : targetPlanets) {
+				val closestPlayerPlanet = playerPlanets.stream()
+					.sorted((Planet lhs, Planet rhs) -> {
+						val leftDistance = (int)target.distance(lhs);
+						val rightDistance = (int)target.distance(rhs);
+						
+						return leftDistance - rightDistance;
+					})
+					.findFirst();
+				
+				if (closestPlayerPlanet.isPresent()) {
+					val playerPlanet = closestPlayerPlanet.get();
+					
+					log.trace(String.format("Sending mission from %d to %d", playerPlanet.getId(), target.getId()));
+					spaceMission(playerPlanet, target);
+				}
+			}
+		}
+	}
+	
+	private boolean isEffectPlayerRelated(ActionEffect effect) {
+		return effect.getInflictingPlayer() == gameState.getPlayerId();
+	}
+	
+	private Optional<GameAction> tryFindOriginalPlayerAction(ActionEffect effect) {
+		// NOTE this strategy does not work if multiple actions target the same object!
+		var maybeAction = activeActions.values()
+			.stream()
+			.map(response -> response.getAction())
+			.filter(a -> a.getTargetId() == effect.getAffectedMapObjectId())
+			.findAny();
+		
+		if (!maybeAction.isPresent()) {
+			maybeAction = initiatedActions.values()
+				.stream()
+				.filter(a -> a.getTargetId() == effect.getAffectedMapObjectId())
+				.findAny();
+		}
+		
+		return maybeAction;
+	}
+	
+	private void handleActionFallout(GameAction action, ActionEffect effect) {
+		// remove the action from the active action list
+		if (activeActions.containsKey(action.getRefId())) {
+			activeActions.remove(action.getRefId());
+		}
+		
+		if (initiatedActions.containsKey(action.getRefId())) {
+			initiatedActions.remove(action.getRefId());
+		}
+		
+		if (effect.getEffectChain().contains(ActionEffectType.SPACE_MISSION_SUCCESS)) {
+			gameState.spaceMissionSuccessful(effect.getAffectedMapObjectId());
+		}
+		
+		if (effect.getEffectChain().contains(ActionEffectType.SPACE_MISSION_DESTROYED)) {
+			gameState.spaceMissionFailed(effect.getAffectedMapObjectId());
+		}
+	}
+	
+	private void handleAttributeChange(GameEvent event) {
+		val changes = event.getChanges();
+		
+		boolean actionNumberChanged = false; 
+		
+		for (val change : changes.getChanges()) {
+			if (change.getName().equals("numberOfRemainingActions")) {
+				actionCounter.set(gameState.getMaxConcurrentActionCount() - Integer.parseInt(change.getValue()));
+				actionNumberChanged = true;
+			}
+		}
+		
+		if (actionNumberChanged) {
+			val pastActionResponses = activeActions.values()
+				.stream()
+				.filter(action -> action.getActionEndTime() <= event.getEventTime())
+				.collect(Collectors.toList());
+			
+			for (val actionResponse : pastActionResponses) {
+				val action = actionResponse.getAction(); 
+				if (action.getType() == GameActionType.SPACE_MISSION) {
+					gameState.spaceMissionFailed(action.getTargetId());
+				}
+			}
+		}
+	}
+
+	private boolean hasFreeAction() {
+		return activeActionCount() < gameState.getMaxConcurrentActionCount();
+	}
+	
+	private int activeActionCount() {
+		return actionCounter.get() + initiatedActions.size();
+	}
+	
+	private int availableActionCount() {
+		return gameState.getMaxConcurrentActionCount() - activeActionCount();
+	}
+	
+	private void spaceMission(Planet sourcePlanet, Planet targetPlanet) {
+		spaceMission(sourcePlanet.getId(), targetPlanet.getId());
 	}
 	
 	private void spaceMission(int sourcePlanet, int targetPlanet) {

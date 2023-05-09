@@ -13,6 +13,9 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.SneakyThrows;
+import lombok.val;
+
 @Component
 public class PlanetWebSocketHandler extends TextWebSocketHandler {
 
@@ -71,4 +74,13 @@ public class PlanetWebSocketHandler extends TextWebSocketHandler {
                 session.sendMessage(new TextMessage(json));
             }
     }
+
+    @SneakyThrows
+	public void shutdown() {
+		for (val session : sessions) {
+			if (session.isOpen()) {
+				session.close();
+			}
+		}
+	}
 }

@@ -178,15 +178,6 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 		return setActionIdAndSend(action);
 	}
 
-	private GameAction setActionIdAndSend(GameAction action) {
-		val id = commandRefSequence.incrementAndGet();
-		action.setRefId(id);
-
-		send(action);
-
-		return action;
-	}
-
 	public void testUi(){
 		GameEvent g1 = new GameEvent();
 		g1.setGame(GameEvent.builder()
@@ -211,7 +202,21 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 						.build()).build().getGame());
 
 		gameStateHolder.setMyObject(GameDtoMapper.toGameDto(g1));
+	}
 
+	@SneakyThrows
+	public void shutdown() {
+		if (clientSession != null && clientSession.isOpen()) {
+			clientSession.close();
+		}
+	}
+	
+	private GameAction setActionIdAndSend(GameAction action) {
+		val id = commandRefSequence.incrementAndGet();
+		action.setRefId(id);
 
+		send(action);
+
+		return action;
 	}
 }
