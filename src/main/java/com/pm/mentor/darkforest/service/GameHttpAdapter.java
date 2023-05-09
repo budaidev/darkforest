@@ -1,8 +1,6 @@
 package com.pm.mentor.darkforest.service;
 
-import com.loxon.javachallenge.challenge.game.rest.BotDefinition;
 import java.io.BufferedReader;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
@@ -15,6 +13,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
+import com.loxon.javachallenge.challenge.game.rest.BotDefinition;
 import com.loxon.javachallenge.challenge.game.rest.GameConfig;
 import com.loxon.javachallenge.challenge.game.rest.GameCreated;
 import com.loxon.javachallenge.challenge.game.rest.GameKey;
@@ -146,22 +145,6 @@ public class GameHttpAdapter {
         		
         		log.warn(String.format("%s: %s", headerName, headerValue));
         	}
-
-			InputStream errorStream = connection.getErrorStream();
-			if (errorStream != null) {
-				try (BufferedReader reader = new BufferedReader(new InputStreamReader(errorStream))) {
-					StringBuilder response = new StringBuilder();
-
-					String line;
-					while ((line = reader.readLine()) != null) {
-						response.append(line);
-					}
-
-					log.warn("Error response: " + response.toString());
-					return response.toString();
-				}
-			}
-
         	
         	log.warn("Dumping content...");
         	try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()))) {
