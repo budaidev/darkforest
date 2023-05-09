@@ -202,21 +202,14 @@ public class SampleAI implements AI {
 	}
 	
 	private void handleActionFallout(GameAction action, ActionEffect effect) {
-		// remove the action from the active action list
+		// try remove the action from the active action list
 		if (activeActions.containsKey(action.getRefId())) {
 			activeActions.remove(action.getRefId());
 		}
 		
-		if (initiatedActions.containsKey(action.getRefId())) {
-			initiatedActions.remove(action.getRefId());
-		}
-		
+		// we only receive an effect notification about successful space missions (for missions we launched)
 		if (effect.getEffectChain().contains(ActionEffectType.SPACE_MISSION_SUCCESS)) {
 			gameState.spaceMissionSuccessful(effect.getAffectedMapObjectId());
-		}
-		
-		if (effect.getEffectChain().contains(ActionEffectType.SPACE_MISSION_DESTROYED)) {
-			gameState.spaceMissionFailed(effect.getAffectedMapObjectId());
 		}
 	}
 	
