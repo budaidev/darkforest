@@ -1,18 +1,15 @@
 package com.pm.mentor.darkforest.service;
 
-import com.pm.mentor.darkforest.ai.AI;
-import com.pm.mentor.darkforest.ai.manual.ManualAI;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.loxon.javachallenge.challenge.game.event.GameEvent;
 import com.pm.mentor.darkforest.ai.AIRunner;
 import com.pm.mentor.darkforest.ai.GameActionApi;
-import com.pm.mentor.darkforest.ai.SampleAI;
+import com.pm.mentor.darkforest.ai.manual.ManualAI;
 
 @Component
 public class AIContainer {

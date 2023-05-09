@@ -1,17 +1,7 @@
 package com.pm.mentor.darkforest.contoller;
 
-import com.loxon.javachallenge.challenge.game.event.action.BuildWormHoleAction;
-import com.loxon.javachallenge.challenge.game.event.action.ErectShieldAction;
-import com.loxon.javachallenge.challenge.game.event.action.ShootMBHAction;
-import com.loxon.javachallenge.challenge.game.event.action.SpaceMissionAction;
-import com.pm.mentor.darkforest.ai.manual.actionevents.BuildWormholeEvent;
-import com.pm.mentor.darkforest.ai.manual.actionevents.ErectShieldEvent;
-import com.pm.mentor.darkforest.ai.manual.actionevents.ShootMBHEvent;
-import com.pm.mentor.darkforest.ai.manual.actionevents.SpaceMissionEvent;
 import java.util.List;
 
-import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,15 +9,25 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.loxon.javachallenge.challenge.game.event.action.BuildWormHoleAction;
+import com.loxon.javachallenge.challenge.game.event.action.ErectShieldAction;
+import com.loxon.javachallenge.challenge.game.event.action.ShootMBHAction;
+import com.loxon.javachallenge.challenge.game.event.action.SpaceMissionAction;
 import com.loxon.javachallenge.challenge.game.rest.BotDefinition;
 import com.loxon.javachallenge.challenge.game.rest.GameConfig;
 import com.loxon.javachallenge.challenge.game.rest.GameCreated;
 import com.loxon.javachallenge.challenge.game.rest.GameKey;
+import com.pm.mentor.darkforest.ai.manual.actionevents.BuildWormholeEvent;
+import com.pm.mentor.darkforest.ai.manual.actionevents.ErectShieldEvent;
+import com.pm.mentor.darkforest.ai.manual.actionevents.ShootMBHEvent;
+import com.pm.mentor.darkforest.ai.manual.actionevents.SpaceMissionEvent;
 import com.pm.mentor.darkforest.service.AIContainer;
 import com.pm.mentor.darkforest.service.GameHttpAdapter;
 import com.pm.mentor.darkforest.service.GameKeyRepository;
 import com.pm.mentor.darkforest.service.GameKeyRepository.TimeStampedString;
 import com.pm.mentor.darkforest.service.GameWebSocketAdapter;
+
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @Slf4j
