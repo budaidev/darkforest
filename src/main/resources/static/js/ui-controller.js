@@ -4,13 +4,15 @@ class GameEvent {
      * @param {number} width 
      * @param {number} height 
      * @param {Array<Planet>} planets 
-     * @param {Array<Wormhole>} wormholes 
+     * @param {Array<Wormhole>} wormholes
+     * @param {string} eventType
      */
-    constructor(width, height, planets, wormholes) {
+    constructor(width, height, planets, wormholes, eventType) {
         this.width = width;
         this.height = height;
         this.planets = planets;
         this.wormholes = wormholes;
+        this.eventType = eventType;
     }
 }
 
@@ -79,6 +81,7 @@ class Position {
 
 class UIController {
     static #PlanetSize = 25;
+    static #Colors = ["gray", "red", "blue", "green", "yellow", "orange", "purple", "pink", "brown"];
 
     #container;
 
@@ -92,8 +95,12 @@ class UIController {
 
     #planetElements;
     #wormholeElements;
-    #planets = [];
-    #wormholes = [];
+    #planets;
+    #wormholes;
+
+    #playerDict = {
+        0: 0
+    };
 
     /**
      * @param {string} containerId 
@@ -104,10 +111,7 @@ class UIController {
         this.#containerWidth = this.#container.clientWidth;
         this.#containerHeight = this.#container.clientHeight;
 
-        this.#planetElements = new Map();
-        this.#wormholeElements = new Map();
-        this.#planets = new Map();
-        this.#wormholes = new Map();
+        this.#reset();
 
         this.#resizeObserver = new ResizeObserver(() => {
             this.#containerWidth = this.#container.clientWidth;
@@ -128,6 +132,22 @@ class UIController {
     receiveGameEvent(gameEvent) {
         this.#setMapSize(gameEvent);
 
+        if (gameEvent.eventType === 'GAME_STARTED') {
+            this.#reset();
+
+            const players = gameEvent.players;
+
+            for (let i = 0; i < players.length; i++) {
+                this.#playerDict[players[i].id] = i+1;
+            }
+        } else if (gameEvent.eventType === 'ACTION_EFFECT') {
+            const actionEffect = gameEvent.actionEffect;
+            const planet = this.#planets.get(actionEffect.id);
+            const planetPosition = this.#calculateRenderedPosition(planet.x, planet.y, UIController.#PlanetSize);
+
+            this.#drawLine(planetPosition.x, planetPosition.y, 5*10, actionEffect.dir);
+        }
+
         if (gameEvent.planets && gameEvent.planets.length > 0) {
             this.#renderPlanets(gameEvent.planets);
         }
@@ -135,6 +155,22 @@ class UIController {
         if (gameEvent.wormholes && gameEvent.wormholes.length > 0) {
             this.#renderWormholes(gameEvent.wormholes);
         }
+    }
+
+    /**
+     * @returns {void}
+     */
+    #reset() {
+        this.#container.innerHTML = '';
+
+        this.#planetElements = new Map();
+        this.#wormholeElements = new Map();
+        this.#planets = new Map();
+        this.#wormholes = new Map();
+
+        this.#playerDict = {
+            0: 0
+        };
     }
 
     /**
@@ -186,10 +222,11 @@ class UIController {
     #updatePlanetElement(planet, planetDiv) {
         const displayedName = planet.name ?? planet.id;
         const displayedInfo = `pos=(${planet.x}, ${planet.y})`;
-        const backgroundColor = planet.color ?? 'red';
+        const backgroundColor = UIController.#Colors[this.#playerDict[planet.player]] ?? 'red';
         const renderedPosition = this.#calculateRenderedPosition(planet.x, planet.y, UIController.#PlanetSize);
 
         planetDiv.className = 'planet';
+        planetDiv.id = 'planet' + planet.id
         planetDiv.style.width = UIController.#PlanetSize + 'px';
         planetDiv.style.height = UIController.#PlanetSize + 'px';
         planetDiv.style.backgroundColor = backgroundColor;
@@ -198,7 +235,7 @@ class UIController {
 
         const planetPopup = document.createElement('div');
         planetPopup.className = 'planet-popup';
-        planetPopup.innerHTML = `<strong>${displayedName}</strong><br>${displayedInfo}`;
+        planetPopup.innerHTML = `<strong>${displayedName}</strong><br>${displayedInfo}<br>player: ${planet.player}`;
 
         planetDiv.innerHTML = '';
         planetDiv.appendChild(planetPopup);
@@ -247,5 +284,27 @@ class UIController {
             wormholeDiv.appendChild(wormholePopup);
             document.getElementById('container').appendChild(wormholeDiv);
         })
+    }
+
+    #drawLine(x, y, len, angleRad) {
+        // Convert angle from degrees to radians
+        // Calculate the end point of the line
+        const endX = x + len * Math.cos(angleRad);
+        const endY = y + len * Math.sin(angleRad);
+
+        // Create a new div element to represent the line
+        const line = document.createElement("div");
+
+        // Set the position and dimensions of the line
+        line.className = "effect-line"
+        line.style.top = y + "px";
+        line.style.left = x + "px";
+        line.style.width = len + "px";
+
+        // Rotate the line to match the angle
+        line.style.transform = `rotate(${angleRad + Math.PI/2}rad)`;
+
+        // Add the line to the DOM
+        this.#container.appendChild(line);
     }
 }

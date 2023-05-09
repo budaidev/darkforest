@@ -94,7 +94,7 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 
 		String payload = (String)message.getPayload();
 
-		log.info(payload);
+		log.trace(payload);
 
 		GameEvent gameEvent = serializationService.readGameEvent(payload);
 

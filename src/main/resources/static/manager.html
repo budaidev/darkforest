@@ -64,16 +64,25 @@
             translate: var(--render-area-padding) var(--render-area-padding);
         }
 
+        .effect-line {
+            translate: var(--render-area-padding) var(--render-area-padding);
+            position: absolute;
+            height: 0px;
+            /* Apply a border to the line to represent the stroke */
+            border-top: 1px solid black;
+        }
+
         .planet-popup {
             position: relative;
             background-color: white;
             border: 1px solid black;
             padding: 10px;
             display: none;
+            white-space: nowrap;
         }
 
         .planet:hover .planet-popup {
-            display: block;
+            display: inline-block;
             z-index: 1;
         }
 
@@ -175,10 +184,6 @@
 
     const gameManager = new GameManager();
     const uiController = new UIController('container');
-    const colors = ["gray", "red", "blue", "green", "yellow", "orange", "purple", "pink", "brown"];
-    const playerDict = {
-        0: 0
-    };
 
     const gameKeySelector = new DropdownList("selGameKey", event => gameManager.currentGameKey = event.target.value);
     const gameIdSelector = new DropdownList("selGameId", event => gameManager.currentGameId = event.target.value);
@@ -228,7 +233,7 @@
         const dropdownList = document.getElementById("dropdownList");
         const selectedType = dropdownList.value;
 
- 	    const gameConfig = new GameConfig([1], selectedType);
+ 	    const gameConfig = new GameConfig([1, 2, 3], selectedType);
         const response = await gameManager.createGame(gameConfig);
  	    
         gameIdSelector.addAndSelectItem({
@@ -253,121 +258,16 @@
         const response = await fetch(`${GameManager.UrlRoot}/test`);
     };
 
-    const createPlanet = (planet, scale) => {
-        const planetDiv = document.createElement('div');
-        planetDiv.id = 'planet' + planet.id;
-        planetDiv.className = 'planet';
-        planetDiv.style.width = 2 * scale + 'px';
-        planetDiv.style.height = 2 * scale + 'px';
-        planetDiv.style.backgroundColor = colors[playerDict[planet.player]];
-        planetDiv.style.left = planet.x * scale + 'px';
-        planetDiv.style.top = planet.y * scale + 'px';
-        planetDiv.style.position = 'absolute';
-        const planetPopup = document.createElement('div');
-        planetPopup.className = 'planet-popup';
-        planetPopup.innerHTML = '<strong>' + 'id: ' + planet.id + '</strong><br>'
-        '{ ' + planet.x + ', ' + planet.y + '}' +  '<br>' +
-        'player: ' + planet.player + '<br>';
-        planetPopup.style.width = 50 + 'px';
-        planetPopup.style.height = 50 + 'px';
-        planetDiv.appendChild(planetPopup);
-        document.getElementById('container').appendChild(planetDiv);
-    }
-
-    const drawLine = (x, y, len, angleRad) => {
-        let container = document.getElementById('container');
-        // Convert angle from degrees to radians
-        // Calculate the end point of the line
-        const endX = x + len * Math.cos(angleRad);
-        const endY = y + len * Math.sin(angleRad);
-
-        // Create a new div element to represent the line
-        const line = document.createElement("div");
-
-        // Set the position and dimensions of the line
-        line.style.position = "absolute";
-        line.style.top = y + "px";
-        line.style.left = x + "px";
-        line.style.width = len + "px";
-        line.style.height = "0px";
-
-        // Apply a border to the line to represent the stroke
-        line.style.borderTop = "1px solid black";
-
-        // Rotate the line to match the angle
-        line.style.transform = `rotate(${angleRad + Math.PI/2}rad)`;
-
-        // Add the line to the DOM
-        container.appendChild(line);
-    }
-
 
 
     const drawUi = async (jsonConfig) => {
+        uiController.receiveGameEvent(jsonConfig);
+    }
 
-        let scale = 5;
+    const loadDummyUIConfig = async () => {
+        const response = await fetch(`${GameManager.UrlRoot}/sample-config.json`);
 
-        if(jsonConfig.eventType === 'GAME_STARTED'){
-            let container = document.getElementById('container')
-            container.style.width = (jsonConfig.width + 1) * scale + 'px';
-            container.style.height = (jsonConfig.height + 1) * scale + 'px';
-            container.style.position = 'relative';
-
-            let players = jsonConfig.players;
-            console.log(players);
-            for (let i = 0; i < players.length; i++) {
-                console.log(players[i]);
-                playerDict[players[i].id] = i+1;
-            }
-            console.log(playerDict);
-
-        }
-
-        if (jsonConfig.eventType === 'ACTION_EFFECT') {
-            let actionEffect = jsonConfig.actionEffect;
-            let p = document.getElementById('planet' + actionEffect.id)
-            console.log(p.style.left, p.style.top, scale*10, actionEffect.dir)
-
-            drawLine(parseInt(p.style.left), parseInt(p.style.top), scale*10, actionEffect.dir);
-
-        } else {
-
-
-            // Create the planets
-            jsonConfig.planets.forEach((planet) => {
-                let p = document.getElementById('planet' + planet.id)
-                if(p==null){
-                    createPlanet(planet, scale);
-                } else {
-                    p.style.backgroundColor = colors[playerDict[planet.player]];
-                    p.firstChild.innerHTML = '<strong>' + planet.id + '</strong><br>'
-                        + planet.x + ', ' + planet.y + '<br>';
-                }
-
-            });
-            // Create the wormholes
-            if (jsonConfig.wormholes) {
-                jsonConfig.wormholes.forEach((wormhole) => {
-                    const dy = wormhole.x2 - wormhole.x1;
-                    const dx = wormhole.y2 - wormhole.y1;
-                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-                    const length = Math.sqrt(dx * dx + dy * dy);
-                    const wormholeDiv = document.createElement('div');
-                    wormholeDiv.className = 'wormhole';
-                    wormholeDiv.style.width = length + 'px';
-                    wormholeDiv.style.left = wormhole.x1 + 'px';
-                    wormholeDiv.style.top = wormhole.y1 - 5 + 'px';
-                    wormholeDiv.style.transform = 'rotate(' + angle + 'deg)';
-                    wormholeDiv.style.backgroundColor = wormhole.color;
-
-                    const wormholePopup = document.createElement('div');
-                    wormholePopup.className = 'wormhole-popup';
-                    wormholePopup.innerHTML = '<strong>' + wormhole.name + '</strong><br>' + wormhole.info;
-
-                    wormholeDiv.appendChild(wormholePopup);
-                    document.getElementById('container').appendChild(wormholeDiv);
-                })
-            }
+        drawUi(await response.json());
     }
 
     /**
