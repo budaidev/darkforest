@@ -65,7 +65,7 @@
         }
 
         .effect-line {
-            translate: var(--render-area-padding) var(--render-area-padding);
+            translate: calc(var(--render-area-padding)-12px) calc(var(--render-area-padding) + 12px);
             position: absolute;
             height: 0px;
             /* Apply a border to the line to represent the stroke */
@@ -118,7 +118,7 @@
             height: 100%;
             background-color: #EEEEEE;
             box-sizing: border-box; /* add this line */
-            padding: 20px; /* add your desired padding */
+            padding: var(--render-area-padding);
             position: relative;
         }
 
