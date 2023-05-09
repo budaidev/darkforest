@@ -154,6 +154,17 @@ public class SampleAI implements AI {
 		
 		if (closestUnknownPlanets.size() > 0) {
 			val targetPlanets = closestUnknownPlanets.stream()
+				.filter(planet -> {
+					val initiatedActionExists = initiatedActions.values()
+						.stream()
+						.anyMatch(action -> action.getTargetId() == planet.getId());
+					
+					val activeActionExists = activeActions.values()
+						.stream()
+						.anyMatch(actionResponse -> actionResponse.getAction().getTargetId() == planet.getId());
+					
+					return !(initiatedActionExists || activeActionExists);
+				})
 				.limit(availableActionCount())
 				.collect(Collectors.toList());
 			
