@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <title>Game Control Panel</title>
     <style>
+
+        :root {
+            --render-area-padding: 10px;
+        }
+
         html, body {
             height: 100%;
             margin: 0;
@@ -53,9 +58,10 @@
         }
 
         .planet {
-            position: relative;
+            position: absolute;
             border-radius: 50%;
             transition: transform 0.2s;
+            translate: var(--render-area-padding) var(--render-area-padding);
         }
 
         .planet-popup {
@@ -103,7 +109,8 @@
             background-color: #EEEEEE;
             flex: 1;
             box-sizing: border-box; /* add this line */
-            padding: 10px; /* add your desired padding */
+            padding: var(--render-area-padding);
+            position: relative;
         }
 
         main {
@@ -163,9 +170,11 @@
 
 <script type="text/javascript" src="js/game-manager.js"></script>
 <script type="text/javascript" src="js/dropdownlist.js"></script>
+<script type="text/javascript" src="js/ui-controller.js"></script>
 <script type="text/javascript">
 
     const gameManager = new GameManager();
+    const uiController = new UIController('container');
 
     const gameKeySelector = new DropdownList("selGameKey", event => gameManager.currentGameKey = event.target.value);
     const gameIdSelector = new DropdownList("selGameId", event => gameManager.currentGameId = event.target.value);
@@ -224,105 +233,29 @@
         });
     };
   
-    const connectWebSocket = async () => {
+    const connectWebSocket = async () =>
     	await gameManager.connectWebSocket();
-    };
   
-    const startGame = async () => {
+    const startGame = async () =>
     	await gameManager.startGame();
-    };
   
-    const stopGame = async () => {
+    const stopGame = async () =>
     	await gameManager.stopGame();
-    };
 
-    const getBots = async () => {
+    const getBots = async () =>
         await gameManager.getBots();
-    };
 
     const testUi = async () => {
         const response = await fetch(`${GameManager.UrlRoot}/test`);
     };
 
-    const drawUi = async (jsonConfig) => {
-        /*const jsonConfig = {
-                width: 800,
-                height: 600,
-                planets: [
-                    {
-                        name: 'Planet 1',
-                        x: 100,
-                        y: 100,
-                        radius: 25,
-                        color: '#ff0000',
-                        info: 'This is planet 1'
-                    },
-                    {
-                        name: 'Planet 2',
-                        x: 400,
-                        y: 300,
-                        radius: 25,
-                        color: '#00ff00',
-                        info: 'This is planet 2'
-                    }
-                ],
-                wormholes: [
-                    {
-                        name: 'Wormhole 1',
-                        x1: 200,
-                        y1: 200,
-                        x2: 500,
-                        y2: 400,
-                        color: '#000000',
-                        info: 'This is wormhole 1'
-                    }
-                ]
-            }
-        };*/
+    const drawUi = jsonConfig =>
+        uiController.receiveGameEvent(jsonConfig);
 
-        // Create the planets
-        jsonConfig.planets.forEach((planet) => {
-            const planetDiv = document.createElement('div');
-            planetDiv.className = 'planet';
-            planetDiv.style.width = 25 + 'px';
-            planetDiv.style.height = 25 + 'px';
-            planetDiv.style.backgroundColor = planet.color;
-            planetDiv.style.left = planet.x - 25 + 'px';
-            planetDiv.style.top = planet.y - 25 + 'px';
+    const loadDummyUIConfig = async () => {
+        const response = await fetch(`${GameManager.UrlRoot}/sample-config.json`);
 
-            const planetPopup = document.createElement('div');
-            planetPopup.className = 'planet-popup';
-            planetPopup.innerHTML = '<strong>' + planet.name + '</strong><br>' + planet.info;
-
-            planetDiv.appendChild(planetPopup);
-            document.getElementById('container').appendChild(planetDiv);
-        });
-
-        // Create the wormholes
-        if (jsonConfig.wormholes) {
-            jsonConfig.wormholes.forEach((wormhole) => {
-
-                const dx = wormhole.x2 - wormhole.x1;
-                const dy = wormhole.y2 - wormhole.y1;
-                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-                const length = Math.sqrt(dx * dx + dy * dy);
-
-                const wormholeDiv = document.createElement('div');
-                wormholeDiv.className = 'wormhole';
-                wormholeDiv.style.width = length + 'px';
-                wormholeDiv.style.left = wormhole.x1 + 'px';
-                wormholeDiv.style.top = wormhole.y1 - 5 + 'px';
-                wormholeDiv.style.transform = 'rotate(' + angle + 'deg)';
-                wormholeDiv.style.backgroundColor = wormhole.color;
-
-                const wormholePopup = document.createElement('div');
-                wormholePopup.className = 'wormhole-popup';
-                wormholePopup.innerHTML = '<strong>' + wormhole.name + '</strong><br>' + wormhole.info;
-
-                wormholeDiv.appendChild(wormholePopup);
-                document.getElementById('container').appendChild(wormholeDiv);
-            })
-        }
+        drawUi(await response.json());
     }
 
     /**
@@ -349,7 +282,8 @@
     historyDropDownInitializer(`${GameManager.UrlRoot}/gameKeyHistory`, gameKeySelector);
     historyDropDownInitializer(`${GameManager.UrlRoot}/gameIdHistory`, gameIdSelector);
 
-    joinUiSocket();    
+    joinUiSocket();
+    loadDummyUIConfig();
   
 </script>
 </body>
