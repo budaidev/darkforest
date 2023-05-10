@@ -47,9 +47,8 @@ public class ManualAI implements AI {
 	}
 
 	@Override
-	public void init(Game game, int playerId) {
-		gameState = new GameState(game, playerId);
-
+	public void init(GameState state) {
+		gameState = state;
 		running = true;
 	}
 

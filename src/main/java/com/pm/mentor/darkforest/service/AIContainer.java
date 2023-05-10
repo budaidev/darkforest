@@ -1,10 +1,18 @@
 package com.pm.mentor.darkforest.service;
 
+import com.loxon.javachallenge.challenge.game.event.ConnectionResultType;
+import com.loxon.javachallenge.challenge.game.event.EventType;
+import com.loxon.javachallenge.challenge.game.event.action.ActionResult;
+import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffectType;
+import com.pm.mentor.darkforest.ai.model.GameState;
+import com.pm.mentor.darkforest.ui.GameDtoMapper;
+import com.pm.mentor.darkforest.ui.GameStateHolder;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import lombok.val;
 import org.springframework.stereotype.Component;
 
 import com.loxon.javachallenge.challenge.game.event.GameEvent;
@@ -22,11 +30,17 @@ public class AIContainer {
 	private ScheduledFuture<?> scheduledTask;
 	
 	private GameActionApi gameActionApi;
+	private GameState gameState;
+	private GameStateHolder gameStateHolder;
 
 	private AI ai;
 
-	public AIContainer(ManualAI ai) {
+	private int playerId;
+
+	public AIContainer(ManualAI ai, GameStateHolder gameStateHolder) {
+
 		this.ai = ai;
+		this.gameStateHolder = gameStateHolder;
 	}
 	
 	public void create() {
@@ -43,8 +57,56 @@ public class AIContainer {
 	}
 	
 	public void receiveGameEvent(GameEvent event) {
+		handleGameEvent(event);
 		runner.receiveEvent(event);
 		scheduler.execute(runner);
+	}
+
+	public void handleGameEvent(GameEvent event){
+		switch (event.getEventType()) {
+			case ACTION:
+
+				break;
+
+			case CONNECTION_RESULT:
+				val result = event.getConnectionResult();
+
+				if (result.getConnectionResultType() == ConnectionResultType.SUCCESS) {
+					playerId = result.getPlayerId();
+				} else {
+					throw new RuntimeException(String.format("Failed connecting to game: %s", result.getConnectionResultType()));
+				}
+				break;
+			case GAME_STARTED:
+				gameState = new GameState(event.getGame(), playerId);
+				runner.startGame(gameState);
+				break;
+			case ACTION_EFFECT:
+				val effect = event.getActionEffect();
+				if (effect.getEffectChain().contains(ActionEffectType.SPACE_MISSION_SUCCESS)) {
+					gameState.spaceMissionSuccessful(effect.getAffectedMapObjectId());
+				}
+
+				gameStateHolder.updatePlanetStatus(gameState.getPlanets());
+				break;
+			case ATTRIBUTE_CHANGE:
+				val changes = event.getChanges();
+
+				for (val change : changes.getChanges()) {
+					if (changes.isForPlanet()) {
+						switch (change.getName()) {
+							case "destroyed":
+								gameState.planetDestroyed(changes.getAffectedId());
+								gameStateHolder.updatePlanetStatus(gameState.getPlanets());
+								break;
+						}
+					}
+				}
+
+				break;
+			case GAME_ENDED:
+				break;
+		}
 	}
 
 	public void attachGameActionApi(GameActionApi api) {

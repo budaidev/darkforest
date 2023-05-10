@@ -40,9 +40,9 @@ public class SampleAI implements AI {
 	}
 	
 	@Override
-	public void init(Game game, int playerId) {
+	public void init(GameState gameState) {
 		log.info("AI initialized");
-		gameState = new GameState(game, playerId);
+		this.gameState = gameState;
 		
 		running = true;
 	}

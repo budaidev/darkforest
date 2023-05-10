@@ -1,5 +1,6 @@
 package com.pm.mentor.darkforest.ai;
 
+import com.pm.mentor.darkforest.ai.model.GameState;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import com.loxon.javachallenge.challenge.game.event.ConnectionResultType;
@@ -16,8 +17,6 @@ public class AIRunner implements Runnable {
 	
 	private AI aiImplementation;
 	private long lastExecution = 0;
-	
-	private int playerId;
 
 	@Override
 	public void run() {
@@ -50,20 +49,11 @@ public class AIRunner implements Runnable {
 		aiImplementation = impl;
 	}
 
+	public void startGame(GameState gameState) {
+		aiImplementation.init(gameState);
+	}
+
 	public void receiveEvent(GameEvent event) {
-		if (event.getEventType() == EventType.CONNECTION_RESULT) {
-			val result = event.getConnectionResult();
-			
-			if (result.getConnectionResultType() == ConnectionResultType.SUCCESS) {
-				playerId = result.getPlayerId();
-			} else {
-				throw new RuntimeException(String.format("Failed connecting to game: %s", result.getConnectionResultType()));
-			}
-		}
-		
-		if (event.getEventType() == EventType.GAME_STARTED) {
-			aiImplementation.init(event.getGame(), playerId);
-		}
 		
 		commandQueue.add(event);
 	}
