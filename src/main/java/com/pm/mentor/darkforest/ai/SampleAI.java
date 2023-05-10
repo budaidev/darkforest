@@ -3,7 +3,6 @@ package com.pm.mentor.darkforest.ai;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.loxon.javachallenge.challenge.game.event.GameEvent;
@@ -13,8 +12,6 @@ import com.loxon.javachallenge.challenge.game.event.action.EntryPointIndex;
 import com.loxon.javachallenge.challenge.game.event.action.GameAction;
 import com.loxon.javachallenge.challenge.game.event.action.GameActionType;
 import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffect;
-import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffectType;
-import com.loxon.javachallenge.challenge.game.model.Game;
 import com.loxon.javachallenge.challenge.game.model.Planet;
 import com.pm.mentor.darkforest.ai.model.GameState;
 
@@ -29,8 +26,6 @@ public class SampleAI implements AI {
 	private GameState gameState;
 	private Map<Integer, GameAction> initiatedActions = new HashMap<>();
 	private Map<Integer, ActionResponse> activeActions = new HashMap<>();
-	
-	private AtomicInteger actionCounter = new AtomicInteger(0);
 	
 	@Getter
 	private boolean running = false;
@@ -220,11 +215,6 @@ public class SampleAI implements AI {
 		if (activeActions.containsKey(action.getRefId())) {
 			activeActions.remove(action.getRefId());
 		}
-		
-		// we only receive an effect notification about successful space missions (for missions we launched)
-		if (effect.getEffectChain().contains(ActionEffectType.SPACE_MISSION_SUCCESS)) {
-			gameState.spaceMissionSuccessful(effect.getAffectedMapObjectId());
-		}
 	}
 	
 	private void handleAttributeChange(GameEvent event) {
@@ -236,14 +226,7 @@ public class SampleAI implements AI {
 			if (changes.isForPlayer()) {
 				switch (change.getName()) {
 				case "numberOfRemainingActions":
-					actionCounter.set(gameState.getMaxConcurrentActionCount() - Integer.parseInt(change.getValue()));
 					actionNumberChanged = true;
-					break;
-				}
-			} else if (changes.isForPlanet()) {
-				switch (change.getName()) {
-				case "destroyed":
-					gameState.planetDestroyed(changes.getAffectedId());
 					break;
 				}
 			}
@@ -270,7 +253,6 @@ public class SampleAI implements AI {
 	}
 	
 	private int activeActionCount() {
-		// return actionCounter.get() + initiatedActions.size();
 		return activeActions.size() + initiatedActions.size();
 	}
 	

@@ -1,28 +1,28 @@
 package com.pm.mentor.darkforest.service;
 
-import com.loxon.javachallenge.challenge.game.event.ConnectionResultType;
-import com.loxon.javachallenge.challenge.game.event.EventType;
-import com.loxon.javachallenge.challenge.game.event.action.ActionResult;
-import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffectType;
-import com.pm.mentor.darkforest.ai.model.GameState;
-import com.pm.mentor.darkforest.ui.GameDtoMapper;
-import com.pm.mentor.darkforest.ui.GameStateHolder;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import lombok.val;
 import org.springframework.stereotype.Component;
 
+import com.loxon.javachallenge.challenge.game.event.ConnectionResultType;
 import com.loxon.javachallenge.challenge.game.event.GameEvent;
+import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffectType;
 import com.pm.mentor.darkforest.ai.AI;
 import com.pm.mentor.darkforest.ai.AIRunner;
 import com.pm.mentor.darkforest.ai.GameActionApi;
 import com.pm.mentor.darkforest.ai.SampleAI;
 import com.pm.mentor.darkforest.ai.manual.ManualAI;
+import com.pm.mentor.darkforest.ai.model.GameState;
+import com.pm.mentor.darkforest.ui.GameStateHolder;
+
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 public class AIContainer {
 	
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
@@ -57,12 +57,20 @@ public class AIContainer {
 	}
 	
 	public void receiveGameEvent(GameEvent event) {
+		val timeStarted = System.currentTimeMillis();
+		
 		handleGameEvent(event);
 		runner.receiveEvent(event);
 		scheduler.execute(runner);
+		
+		val elapsed = System.currentTimeMillis() - timeStarted;
+		
+		if (elapsed > 20) {
+			log.warn(String.format("AIContainer.receiveGameEvent execution took: %d ms", elapsed));
+		}
 	}
 
-	public void handleGameEvent(GameEvent event){
+	public void handleGameEvent(GameEvent event) {
 		switch (event.getEventType()) {
 			case ACTION:
 
@@ -76,11 +84,15 @@ public class AIContainer {
 				} else {
 					throw new RuntimeException(String.format("Failed connecting to game: %s", result.getConnectionResultType()));
 				}
+
 				break;
+
 			case GAME_STARTED:
 				gameState = new GameState(event.getGame(), playerId);
 				runner.startGame(gameState);
+
 				break;
+
 			case ACTION_EFFECT:
 				val effect = event.getActionEffect();
 				if (effect.getEffectChain().contains(ActionEffectType.SPACE_MISSION_SUCCESS)) {
@@ -88,7 +100,9 @@ public class AIContainer {
 				}
 
 				gameStateHolder.updatePlanetStatus(gameState.getPlanets());
+				
 				break;
+				
 			case ATTRIBUTE_CHANGE:
 				val changes = event.getChanges();
 
@@ -104,6 +118,7 @@ public class AIContainer {
 				}
 
 				break;
+
 			case GAME_ENDED:
 				break;
 		}

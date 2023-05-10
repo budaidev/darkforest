@@ -11,6 +11,7 @@ import com.loxon.javachallenge.challenge.game.model.Planet;
 import com.loxon.javachallenge.challenge.game.settings.GameSettings;
 
 import lombok.Getter;
+import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 
 @Getter
@@ -32,18 +33,21 @@ public class GameState {
 		return settings.getMaxConcurrentActions();
 	}
 	
+	@Synchronized
 	public List<Planet> getPlayerPlanets() {
 		return planets.stream()
 			.filter(p -> p.getPlayer() == playerId)
 			.collect(Collectors.toList());
 	}
 	
+	@Synchronized
 	public List<Planet> getUnknownPlanets() {
 		return planets.stream()
 			.filter(p -> p.getPlayer() == 0 && p.isDestroyed() == false)
 			.collect(Collectors.toList());
 	}
 	
+	@Synchronized
 	public List<Planet> getUnknownPlanets(Comparator<? super Planet> comparator) {
 		return planets.stream()
 			.filter(p -> p.getPlayer() == 0 && p.isDestroyed() == false)
@@ -51,6 +55,7 @@ public class GameState {
 			.collect(Collectors.toList());
 	}
 
+	@Synchronized
 	public void spaceMissionSuccessful(int affectedMapObjectId) {
 		tryFindPlayerPlanet(affectedMapObjectId)
 			.ifPresent(p -> {
@@ -59,6 +64,7 @@ public class GameState {
 			});
 	}
 
+	@Synchronized
 	public void spaceMissionFailed(int affectedMapObjectId) {
 		tryFindPlayerPlanet(affectedMapObjectId)
 			.ifPresent(p -> {
@@ -68,6 +74,7 @@ public class GameState {
 			});
 	}
 
+	@Synchronized
 	public void planetDestroyed(int affectedId) {
 		tryFindPlayerPlanet(affectedId)
 			.ifPresent(p -> {
@@ -79,6 +86,7 @@ public class GameState {
 			});
 	}
 	
+	@Synchronized
 	public Optional<Planet> tryFindPlayerPlanet(int planetId) {
 		return planets.stream()
 			.filter(p -> p.getId() == planetId)

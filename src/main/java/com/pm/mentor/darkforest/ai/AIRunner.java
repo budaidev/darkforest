@@ -54,7 +54,6 @@ public class AIRunner implements Runnable {
 	}
 
 	public void receiveEvent(GameEvent event) {
-		
 		commandQueue.add(event);
 	}
 	
