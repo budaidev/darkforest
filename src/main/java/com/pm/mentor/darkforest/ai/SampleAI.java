@@ -122,7 +122,8 @@ public class SampleAI implements AI {
 		log.trace("dostuff");
 
 		if (!hasFreeAction()) {
-			log.trace(String.format("No free actions. Used %d of %d", activeActionCount(), gameState.getMaxConcurrentActionCount()));
+			log.trace(String.format("No free actions. Initiated: %d, Active: %d, Calculated: %d, Max: %d",
+					initiatedActions.size(), activeActions.size(), activeActionCount(), gameState.getMaxConcurrentActionCount()));
 			
 			return;
 		}
@@ -255,9 +256,10 @@ public class SampleAI implements AI {
 				.collect(Collectors.toList());
 			
 			for (val actionResponse : pastActionResponses) {
-				val action = actionResponse.getAction(); 
+				val action = actionResponse.getAction();
 				if (action.getType() == GameActionType.SPACE_MISSION) {
 					gameState.spaceMissionFailed(action.getTargetId());
+					activeActions.remove(action.getRefId());
 				}
 			}
 		}
@@ -268,7 +270,8 @@ public class SampleAI implements AI {
 	}
 	
 	private int activeActionCount() {
-		return actionCounter.get() + initiatedActions.size();
+		// return actionCounter.get() + initiatedActions.size();
+		return activeActions.size() + initiatedActions.size();
 	}
 	
 	private int availableActionCount() {

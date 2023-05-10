@@ -102,6 +102,8 @@ class UIController {
         0: 0
     };
 
+    #playerId = 57;
+
     /**
      * @param {string} containerId 
      */
@@ -142,10 +144,15 @@ class UIController {
             }
         } else if (gameEvent.eventType === 'ACTION_EFFECT') {
             const actionEffect = gameEvent.actionEffect;
-            const planet = this.#planets.get(actionEffect.id);
-            const planetPosition = this.#calculateRenderedPosition(planet.x, planet.y, UIController.#PlanetSize);
 
-            this.#drawLine(planetPosition.x, planetPosition.y, 5*10, actionEffect.dir);
+            if (actionEffect.p !== this.#playerId) {
+                const planet = this.#planets.get(actionEffect.id);
+                const planetPosition = this.#calculateRenderedPosition(planet.x, planet.y, UIController.#PlanetSize);
+
+                this.#drawLine(planetPosition.x, planetPosition.y, 5*10, actionEffect.dir);
+            }
+        } else if (gameEvent.eventType === 'CONNECTION_RESULT') {
+            // this.#playerId = gameEvent.connectionResult.playerId;
         }
 
         if (gameEvent.planets && gameEvent.planets.length > 0) {
