@@ -5,11 +5,13 @@ import com.loxon.javachallenge.challenge.game.model.GravityWaveCause;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 /**
  * Egy GravityWave adatait leíró osztály.
  */
 @Data
+@ToString(callSuper=true)
 @EqualsAndHashCode(callSuper = true)
 public class GravityWaveCrossing extends ActionEffect {
 

@@ -2,11 +2,13 @@ package com.loxon.javachallenge.challenge.game.event.action;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 /**
  * A féreglyuk építés akciója.
  */
 @Data
+@ToString(callSuper=true)
 @EqualsAndHashCode(callSuper = true)
 public class BuildWormHoleAction extends GameAction {
 

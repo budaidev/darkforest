@@ -2,11 +2,13 @@ package com.loxon.javachallenge.challenge.game.event.action;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 /**
  * Az MBH kilövés akciója.
  */
 @Data
+@ToString(callSuper=true)
 @EqualsAndHashCode(callSuper = true)
 public class ShootMBHAction extends GameAction {
     /**

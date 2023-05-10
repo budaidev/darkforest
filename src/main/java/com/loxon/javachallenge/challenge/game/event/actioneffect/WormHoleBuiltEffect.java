@@ -6,11 +6,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 /**
  * WormHole építésekor keletkező ActionEffect osztály.
  */
 @Data
+@ToString(callSuper=true)
 @EqualsAndHashCode(callSuper = true)
 public class WormHoleBuiltEffect extends ActionEffect {
 

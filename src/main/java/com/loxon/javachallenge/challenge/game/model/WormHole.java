@@ -2,8 +2,10 @@ package com.loxon.javachallenge.challenge.game.model;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Data
+@ToString(callSuper=true)
 @EqualsAndHashCode(callSuper = false)
 public class WormHole extends MapObject {
 	/**
