@@ -56,6 +56,8 @@ public class SampleAI implements AI {
 			val actionResponse = event.getAction();
 			val action = actionResponse.getAction();
 			
+			log.info(String.format("ActionResponse received: %s", actionResponse));
+			
 			// action response for an action we did not send?
 			if (!initiatedActions.containsKey(action.getRefId())) {
 				log.warn(String.format("Response for non-existent action received: %s", actionResponse.toString()));
@@ -88,7 +90,7 @@ public class SampleAI implements AI {
 			if (isEffectPlayerRelated(actionEffect) ) {
 				val originalAction = tryFindOriginalPlayerAction(actionEffect);
 				
-				originalAction.ifPresent(origAction -> handleActionFallout(origAction, actionEffect));
+				originalAction.ifPresent(origAction -> handlePlayerActionFallout(origAction, actionEffect));
 			}
 			
 			break;
@@ -212,7 +214,7 @@ public class SampleAI implements AI {
 		return maybeAction;
 	}
 	
-	private void handleActionFallout(GameAction action, ActionEffect effect) {
+	private void handlePlayerActionFallout(GameAction action, ActionEffect effect) {
 		// try remove the action from the active action list
 		if (activeActions.containsKey(action.getRefId())) {
 			activeActions.remove(action.getRefId());
@@ -230,9 +232,19 @@ public class SampleAI implements AI {
 		boolean actionNumberChanged = false; 
 		
 		for (val change : changes.getChanges()) {
-			if (change.getName().equals("numberOfRemainingActions")) {
-				actionCounter.set(gameState.getMaxConcurrentActionCount() - Integer.parseInt(change.getValue()));
-				actionNumberChanged = true;
+			if (changes.isForPlayer()) {
+				switch (change.getName()) {
+				case "numberOfRemainingActions":
+					actionCounter.set(gameState.getMaxConcurrentActionCount() - Integer.parseInt(change.getValue()));
+					actionNumberChanged = true;
+					break;
+				}
+			} else if (changes.isForPlanet()) {
+				switch (change.getName()) {
+				case "destroyed":
+					gameState.planetDestroyed(changes.getAffectedId());
+					break;
+				}
 			}
 		}
 		

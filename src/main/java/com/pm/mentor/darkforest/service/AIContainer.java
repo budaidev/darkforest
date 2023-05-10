@@ -60,6 +60,11 @@ public class AIContainer {
 			scheduledTask.cancel(true);
 		}
 		
-		scheduler.shutdown();
+		try {
+			scheduler.shutdown();
+			scheduler.awaitTermination(2, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 }
