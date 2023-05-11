@@ -76,6 +76,7 @@ public class GameState {
 			.ifPresent(p -> {
 				p.setClassM(true);
 				p.setPlayer(playerId);
+				p.setDestroyed(false);
 			});
 	}
 

@@ -35,4 +35,19 @@ public class GameDto {
      */
     @JsonIgnore
     private List<WormHole> wormHoles = new ArrayList<WormHole>();
+
+    /**
+     * Űrmisszió/féreglyuk építés/MBH becsapódás forrásának az irányának a pontossága.
+     */
+    private int gravityWaveSourceLocationPrecision;
+
+    /**
+     * Becsapódott MBH lövés irányának pontossága.
+     */
+    private int mbhShootOriginPrecision;
+
+    /**
+     * Passzivitásból eredő forrás irányának pontossága.
+     */
+    private int passivityFleshPrecision;
 }
