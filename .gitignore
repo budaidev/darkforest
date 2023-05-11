@@ -32,4 +32,4 @@ build/
 ### VS Code ###
 .vscode/
 
-darkforest*
+darkforest.log*

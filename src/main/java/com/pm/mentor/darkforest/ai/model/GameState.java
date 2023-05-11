@@ -14,6 +14,7 @@ import com.loxon.javachallenge.challenge.game.event.action.EntryPointIndex;
 import com.loxon.javachallenge.challenge.game.event.action.GameAction;
 import com.loxon.javachallenge.challenge.game.event.action.GameActionType;
 import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffect;
+import com.loxon.javachallenge.challenge.game.event.actioneffect.GravityWaveCrossing;
 import com.loxon.javachallenge.challenge.game.model.Game;
 import com.loxon.javachallenge.challenge.game.model.Planet;
 import com.loxon.javachallenge.challenge.game.settings.GameSettings;
@@ -37,11 +38,15 @@ public class GameState {
 	private Map<Integer, GameAction> initiatedActions = new HashMap<>();
 	private Map<Integer, ActionResponse> activeActions = new HashMap<>();
 	
+	private final GravityWaveCollector actionEffectCollector;
+	
 	public GameState(Game game, int playerId, GameActionApi gameActionApi) {
 		this.playerId = playerId;
 		settings = game.getSettings();
 		planets = game.getWorld().getPlanets();
 		actionApi = gameActionApi;
+		
+		actionEffectCollector = new GravityWaveCollector(game.getPlayers(), planets, settings.getWidth(), settings.getHeight(), settings.getTimeOfOneLightYear());
 	}
 	
 	public int getMaxConcurrentActionCount() {
@@ -109,44 +114,52 @@ public class GameState {
 			.findFirst();
 	}
 	
+	@Synchronized
 	public void spaceMission(Planet sourcePlanet, Planet targetPlanet) {
 		spaceMission(sourcePlanet.getId(), targetPlanet.getId());
 	}
 	
+	@Synchronized
 	public void spaceMission(int sourcePlanet, int targetPlanet) {
 		val action = actionApi.spaceMission(sourcePlanet, targetPlanet);
 		
 		initiatedActions.put(action.getRefId(), action);
 	}
-		
+	
+	@Synchronized
 	public void spaceMissionWithWormHole(int sourcePlanet, int targetPlanet, int wormHole, EntryPointIndex wormHoleSide) {
 		val action = actionApi.spaceMissionWithWormHole(sourcePlanet, targetPlanet, wormHole, wormHoleSide);
 		
 		initiatedActions.put(action.getRefId(), action);
 	}
 	
+	@Synchronized
 	public void buildWormHole(int xa, int ya, int xb, int yb) {
 		val action = actionApi.buildWormHole(xa, ya, xb, yb);
 		
 		initiatedActions.put(action.getRefId(), action);
 	}
 	
+	@Synchronized
 	public void erectShield(int targetPlanet) {
 		val action = actionApi.erectShield(targetPlanet);
 		
 		initiatedActions.put(action.getRefId(), action);
 	}
 	
+	@Synchronized
 	public void shootMBH(int sourcePlanet, int targetPlanet) {
 		val action = actionApi.shootMBH(sourcePlanet, targetPlanet);
 		
 		initiatedActions.put(action.getRefId(), action);
 	}
 	
+	@Synchronized
 	public boolean isEffectPlayerRelated(ActionEffect effect) {
 		return effect.getInflictingPlayer() == getPlayerId();
 	}
 	
+	@Synchronized
 	public Optional<GameAction> tryFindOriginalPlayerAction(ActionEffect effect) {
 		// NOTE this strategy does not work if multiple actions target the same object!
 		var maybeAction = activeActions.values()
@@ -165,6 +178,7 @@ public class GameState {
 		return maybeAction;
 	}
 	
+	@Synchronized
 	public void handlePlayerActionFallout(GameAction action, ActionEffect effect) {
 		// try remove the action from the active action list
 		if (activeActions.containsKey(action.getRefId())) {
@@ -172,6 +186,7 @@ public class GameState {
 		}
 	}
 	
+	@Synchronized
 	public void handleAttributeChange(GameEvent event) {
 		val changes = event.getChanges();
 		
@@ -203,15 +218,25 @@ public class GameState {
 		}
 	}
 
+	@Synchronized
 	public boolean hasFreeAction() {
 		return activeActionCount() < getMaxConcurrentActionCount();
 	}
 	
+	@Synchronized
 	public int activeActionCount() {
 		return activeActions.size() + initiatedActions.size();
 	}
 	
+	@Synchronized
 	public int availableActionCount() {
 		return getMaxConcurrentActionCount() - activeActionCount();
+	}
+
+	@Synchronized
+	public void nonPlayerEffectArrived(ActionEffect actionEffect) {
+		if (actionEffect.getClass().getSimpleName().equals("GravityWaveCrossing")) {
+			actionEffectCollector.collect((GravityWaveCrossing)actionEffect);
+		}
 	}
 }

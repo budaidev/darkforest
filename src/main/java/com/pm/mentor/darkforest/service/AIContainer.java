@@ -127,6 +127,8 @@ public class AIContainer {
 					val originalAction = gameState.tryFindOriginalPlayerAction(actionEffect);
 					
 					originalAction.ifPresent(origAction -> gameState.handlePlayerActionFallout(origAction, actionEffect));
+				} else {
+					gameState.nonPlayerEffectArrived(actionEffect);
 				}
 
 				gameStateHolder.updatePlanetStatus(gameState.getPlanets());
