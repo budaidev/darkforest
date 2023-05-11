@@ -237,12 +237,18 @@ class UIController {
         planetDiv.style.width = UIController.#PlanetSize + 'px';
         planetDiv.style.height = UIController.#PlanetSize + 'px';
         planetDiv.style.backgroundColor = backgroundColor;
+        if(planet.destroyed === true) {
+            planetDiv.style.backgroundColor = 'black';
+        }
         planetDiv.style.left = renderedPosition.x + 'px';
         planetDiv.style.top = renderedPosition.y + 'px';
 
         const planetPopup = document.createElement('div');
         planetPopup.className = 'planet-popup';
-        planetPopup.innerHTML = `<strong>${displayedName}</strong><br>${displayedInfo}<br>player: ${planet.player}`;
+        planetPopup.innerHTML = `<strong>${displayedName}</strong><br>
+        ${displayedInfo}<br>
+        player: ${planet.player}<br>
+        destroyed: ${planet.destroyed}}`;
 
         planetDiv.innerHTML = '';
         planetDiv.appendChild(planetPopup);
