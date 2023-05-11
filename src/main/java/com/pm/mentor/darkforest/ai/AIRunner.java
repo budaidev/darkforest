@@ -1,11 +1,9 @@
 package com.pm.mentor.darkforest.ai;
 
-import com.pm.mentor.darkforest.ai.model.GameState;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import com.loxon.javachallenge.challenge.game.event.ConnectionResultType;
-import com.loxon.javachallenge.challenge.game.event.EventType;
 import com.loxon.javachallenge.challenge.game.event.GameEvent;
+import com.pm.mentor.darkforest.ai.model.GameState;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import com.loxon.javachallenge.challenge.game.event.ConnectionResultType;
 import com.loxon.javachallenge.challenge.game.event.GameEvent;
+import com.loxon.javachallenge.challenge.game.event.action.ActionResult;
 import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffectType;
 import com.pm.mentor.darkforest.ai.AI;
 import com.pm.mentor.darkforest.ai.AIRunner;
@@ -49,7 +50,7 @@ public class AIContainer {
 		}
 
 		runner = new AIRunner();
-		ai = new SampleAI(gameActionApi);
+		ai = new SampleAI();
 		// ai.init(gameActionApi);
 		runner.init(ai);
 		
@@ -73,7 +74,28 @@ public class AIContainer {
 	public void handleGameEvent(GameEvent event) {
 		switch (event.getEventType()) {
 			case ACTION:
-
+				val actionResponse = event.getAction();
+				val action = actionResponse.getAction();
+				
+				log.info(String.format("ActionResponse received: %s", actionResponse));
+				
+				// action response for an action we did not send?
+				if (!gameState.getInitiatedActions().containsKey(action.getRefId())) {
+					log.warn(String.format("Response for non-existent action received: %s", actionResponse.toString()));
+					
+					return;
+				}
+				
+				// remove the action from the initiated actions list
+				gameState.getInitiatedActions().remove(action.getRefId());
+				
+				// add to active actions list
+				if (actionResponse.getResult() == ActionResult.SUCCESS) {
+					gameState.getActiveActions().put(action.getRefId(), actionResponse);
+				}  else {
+					log.warn(String.format("Cannot execute action: %s", actionResponse.toString()));
+				}
+				
 				break;
 
 			case CONNECTION_RESULT:
@@ -88,15 +110,23 @@ public class AIContainer {
 				break;
 
 			case GAME_STARTED:
-				gameState = new GameState(event.getGame(), playerId);
+				gameState = new GameState(event.getGame(), playerId, gameActionApi);
 				runner.startGame(gameState);
 
 				break;
 
 			case ACTION_EFFECT:
-				val effect = event.getActionEffect();
-				if (effect.getEffectChain().contains(ActionEffectType.SPACE_MISSION_SUCCESS)) {
-					gameState.spaceMissionSuccessful(effect.getAffectedMapObjectId());
+				val actionEffect = event.getActionEffect();
+				log.info(String.format("ActionEffect received: %s", actionEffect.toString()));
+
+				if (actionEffect.getEffectChain().contains(ActionEffectType.SPACE_MISSION_SUCCESS)) {
+					gameState.spaceMissionSuccessful(actionEffect.getAffectedMapObjectId());
+				}
+				
+				if (gameState.isEffectPlayerRelated(actionEffect) ) {
+					val originalAction = gameState.tryFindOriginalPlayerAction(actionEffect);
+					
+					originalAction.ifPresent(origAction -> gameState.handlePlayerActionFallout(origAction, actionEffect));
 				}
 
 				gameStateHolder.updatePlanetStatus(gameState.getPlanets());
@@ -116,6 +146,10 @@ public class AIContainer {
 						}
 					}
 				}
+				
+				log.info(String.format("AttributeChange received: %s", event.getChanges().toString()));
+				
+				gameState.handleAttributeChange(event);
 
 				break;
 
