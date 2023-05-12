@@ -1,4 +1,4 @@
-    class WebSocketManager {
+class WebSocketManager {
     static #PlanetsUrl = 'ws://localhost:8080/planets';
     static #ReconnectIntervalMs = 1000;
 
@@ -14,10 +14,21 @@
         this.#startConnecting();
     }
 
+    /**
+     * 
+     * @param {messageHandlerFunc} handler 
+     * @returns {void}
+     * 
+     * @callback messageHandlerFunc
+     * @param {Object} event
+     */
     subscribeToMessage(handler) {
         this.#messageSubscribers.push(handler);
     }
 
+    /**
+     * @returns {void}
+     */
     #reconnect() {
         if (this.#connection === undefined || (this.#connection.readyState !== WebSocket.OPEN && this.#connection.readyState !== WebSocket.CONNECTING)) {
             this.#connection = new WebSocket(WebSocketManager.#PlanetsUrl);
@@ -26,6 +37,9 @@
         }
     }
 
+    /**
+     * @returns {void}
+     */
     #attachEventHandlers() {
         this.#connection.onopen = this.#openHandler.bind(this);
         this.#connection.onclose = this.#closeHandler.bind(this);
@@ -33,6 +47,10 @@
         this.#connection.onerror = this.#errorHandler.bind(this);
     }
 
+    /**
+     * @param {Event} event
+     * @returns {void}
+     */
     #openHandler(event) {
         this.#statusTextboxElement.value = 'Online';
         this.#reconnectTimeoutHandle = undefined;
@@ -42,12 +60,20 @@
         }
     }
 
+    /**
+     * @param {CloseEvent} event 
+     * @return {void}
+     */
     #closeHandler(event) {
         this.#statusTextboxElement.value = 'Offline';
 
         this.#startConnecting();
     }
 
+    /**
+     * @param {MessageEvent} event 
+     * @returns {void}
+     */
     #messageHandler(event) {
         this.#messageSubscribers.forEach(messageConsumer => {
             const data = JSON.parse(event.data);
@@ -56,6 +82,10 @@
         });
     }
 
+    /**
+     * @param {Event} event 
+     * @return {void}
+     */
     #errorHandler(event) {
         console.error(event);
 
@@ -64,6 +94,9 @@
         }
     }
 
+    /**
+     * @returns {void}
+     */
     #startConnecting() {
         if (this.#reconnectTimeoutHandle === undefined) {
             this.#reconnectTimeoutHandle = setInterval(this.#reconnect.bind(this), WebSocketManager.#ReconnectIntervalMs);
