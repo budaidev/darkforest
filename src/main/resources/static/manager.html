@@ -141,10 +141,10 @@
 
 <main>
     <div>
-        <button type="button" onclick="joinUiSocket()">Join websocket for UI</button>
+        <label>Server status:</label>
         <input type="text" id="txbConnectedToServer" readonly>
     </div>
-
+    
     <div>
         <button type="button" onclick="getGameKey()">Get Game Key</button>
         <select id="selGameKey">
@@ -185,44 +185,22 @@
 <script type="text/javascript" src="js/game-manager.js"></script>
 <script type="text/javascript" src="js/dropdownlist.js"></script>
 <script type="text/javascript" src="js/ui-controller.js"></script>
+<script type="text/javascript" src="js/websocket-manager.js"></script>
 <script type="text/javascript">
 
     const gameManager = new GameManager();
     const uiController = new UIController('container');
+    const webSocketManager = new WebSocketManager('txbConnectedToServer');
+
+    webSocketManager.subscribeToMessage((message) => {
+        drawUi(message);
+    });
 
     const gameKeySelector = new DropdownList("selGameKey", event => gameManager.currentGameKey = event.target.value);
     const gameIdSelector = new DropdownList("selGameId", event => gameManager.currentGameId = event.target.value);
 
     gameManager.currentGameKey = gameKeySelector.selected;
     gameManager.currentGameId = gameIdSelector.selected;
-
-    const joinUiSocket = async () => {
-        // Create a new WebSocket connection to the server
-        const socket = new WebSocket(`ws://localhost:8080/planets`);
-
-        socket.addEventListener('open', (event) => {
-            const txbConnectedToServer = document.getElementById('txbConnectedToServer');
-            txbConnectedToServer.value = "Open";
-        });
-
-        socket.addEventListener('close', (event) => {
-            const txbConnectedToServer = document.getElementById('txbConnectedToServer');
-            txbConnectedToServer.value = "Closed";
-        });
-
-        // When the WebSocket connection is open, send a message to request the JSON data
-        socket.addEventListener('open', () => {
-            socket.send('getJson');
-        });
-
-        // When a message is received from the server, parse the JSON and create the planets and wormholes
-        socket.addEventListener('message', event => {
-            const data = JSON.parse(event.data);
-            console.log(data);
-            drawUi(data);
-            // Create the planets and wormholes using the data object
-        });
-    }
   
     const getGameKey = async () => {
     	const response = await gameManager.getGameKey();
@@ -263,8 +241,6 @@
         const response = await fetch(`${GameManager.UrlRoot}/test`);
     };
 
-
-
     const drawUi = async (jsonConfig) => {
         uiController.receiveGameEvent(jsonConfig);
     }
@@ -299,7 +275,6 @@
     historyDropDownInitializer(`${GameManager.UrlRoot}/gameKeyHistory`, gameKeySelector);
     historyDropDownInitializer(`${GameManager.UrlRoot}/gameIdHistory`, gameIdSelector);
 
-    joinUiSocket();
     loadDummyUIConfig();
   
 </script>
