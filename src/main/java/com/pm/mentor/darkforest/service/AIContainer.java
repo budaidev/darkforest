@@ -68,6 +68,8 @@ public class AIContainer {
 		
 		if (elapsed > 20) {
 			log.warn(String.format("AIContainer.receiveGameEvent execution took: %d ms", elapsed));
+		} else {
+			log.trace(String.format("AIContainer.receiveGameEvent execution took: %d ms", elapsed));
 		}
 	}
 
@@ -75,6 +77,13 @@ public class AIContainer {
 		switch (event.getEventType()) {
 			case ACTION:
 				val actionResponse = event.getAction();
+				
+				if (actionResponse.getResult() != ActionResult.SUCCESS) {
+					log.warn(String.format("Cannot execute action: %s", actionResponse.toString()));
+					
+					break;
+				}
+				
 				val action = actionResponse.getAction();
 				
 				log.info(String.format("ActionResponse received: %s", actionResponse));
@@ -90,11 +99,7 @@ public class AIContainer {
 				gameState.getInitiatedActions().remove(action.getRefId());
 				
 				// add to active actions list
-				if (actionResponse.getResult() == ActionResult.SUCCESS) {
-					gameState.getActiveActions().put(action.getRefId(), actionResponse);
-				}  else {
-					log.warn(String.format("Cannot execute action: %s", actionResponse.toString()));
-				}
+				gameState.getActiveActions().put(action.getRefId(), actionResponse);
 				
 				break;
 
@@ -128,8 +133,10 @@ public class AIContainer {
 					
 					originalAction.ifPresent(origAction -> gameState.handlePlayerActionFallout(origAction, actionEffect));
 				} else {
-					gameState.nonPlayerEffectArrived(actionEffect);
+					// gameState.nonPlayerEffectArrived(actionEffect);
 				}
+				
+				gameState.nonPlayerEffectArrived(actionEffect);
 
 				gameStateHolder.updatePlanetStatus(gameState.getPlanets());
 				
@@ -157,6 +164,10 @@ public class AIContainer {
 
 			case GAME_ENDED:
 				break;
+		}
+		
+		if (gameState != null) {
+			gameState.purgeStuckActions(event.getEventTime());
 		}
 	}
 

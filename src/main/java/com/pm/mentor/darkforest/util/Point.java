@@ -14,7 +14,12 @@ public class Point {
         this.y = y;
     }
 
-    public int getX() { return x; }
+    public Point(long x, long y) {
+    	this.x = (int)x;
+        this.y = (int)y;
+	}
+
+	public int getX() { return x; }
     public int getY() { return y; }
 
     public void setX(int x) { this.x = x; }
@@ -24,6 +29,10 @@ public class Point {
         int x = (int) (this.getX() + distance * Math.cos(degreeRad));
         int y = (int) (this.getY() + distance * Math.sin(degreeRad));
         return new Point(x, y);
+    }
+    
+    public Vector minus(Point other) {
+    	return new Vector(x-other.getX(), y-other.getY());
     }
 
     public double distance(Point other) {

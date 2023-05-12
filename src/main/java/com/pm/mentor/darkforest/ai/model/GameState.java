@@ -46,7 +46,7 @@ public class GameState {
 		planets = game.getWorld().getPlanets();
 		actionApi = gameActionApi;
 		
-		actionEffectCollector = new GravityWaveCollector(game.getPlayers(), planets, settings.getWidth(), settings.getHeight(), settings.getTimeOfOneLightYear());
+		actionEffectCollector = new GravityWaveCollector(game.getPlayers(), planets, settings.getWidth(), settings.getHeight(), settings.getTimeOfOneLightYear(), playerId, settings);
 	}
 	
 	public int getMaxConcurrentActionCount() {
@@ -203,10 +203,7 @@ public class GameState {
 		}
 		
 		if (actionNumberChanged) {
-			val pastActionResponses = activeActions.values()
-				.stream()
-				.filter(action -> action.getActionEndTime() <= event.getEventTime())
-				.collect(Collectors.toList());
+			val pastActionResponses = getActionsCompletedBefore(event.getEventTime());
 			
 			for (val actionResponse : pastActionResponses) {
 				val action = actionResponse.getAction();
@@ -238,5 +235,25 @@ public class GameState {
 		if (actionEffect.getClass().getSimpleName().equals("GravityWaveCrossing")) {
 			actionEffectCollector.collect((GravityWaveCrossing)actionEffect);
 		}
+	}
+
+	@Synchronized
+	public void purgeStuckActions(long eventTime) {
+		val pastActionResponses = getActionsCompletedBefore(eventTime);
+		
+		for (val actionResponse : pastActionResponses) {
+			val action = actionResponse.getAction();
+			
+			activeActions.remove(action.getRefId());
+			
+			log.warn(String.format("Removing forgotten action response from active actions list: %s", actionResponse.toString()));
+		}
+	}
+	
+	private List<ActionResponse> getActionsCompletedBefore(long timestamp) {
+		return activeActions.values()
+			.stream()
+			.filter(action -> action.getActionEndTime() <= timestamp)
+			.collect(Collectors.toList());
 	}
 }
