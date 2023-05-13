@@ -238,6 +238,10 @@ class UISVGController {
         if (gameEvent.planets && gameEvent.planets.length > 0) {
             this.#renderPlanets(gameEvent.planets);
         }
+
+        if(gameEvent.wormholes && gameEvent.wormholes.length > 0) {
+            this.#renderWormholes(gameEvent.wormholes);
+        }
     }
 
     enableAnimation() {
@@ -457,6 +461,23 @@ class UISVGController {
         const offset = Math.floor(sizeToOffset / 2);
 
         return renderedPosition.translate(-offset);
+    }
+
+    #renderWormholes(wormholes) {
+        for (const wormhole of wormholes) {
+
+            const line = SVGFactory.createElement('line', {
+                x1: wormhole.x1,
+                y1: wormhole.y1,
+                x2: wormhole.x2,
+                y2: wormhole.y2,
+                stroke: color ?? 'black'
+            });
+
+            // Add the line to the DOM
+            this.#svgContainer.appendChild(line);
+        }
+
     }
 
     #drawLine(x, y, len, angleRad, color) {

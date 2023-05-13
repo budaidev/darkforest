@@ -1,5 +1,6 @@
 package com.pm.mentor.darkforest.ai.model;
 
+import com.loxon.javachallenge.challenge.game.model.WormHole;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -39,6 +40,8 @@ public class GameState {
 	private Map<Integer, ActionResponse> activeActions = new HashMap<>();
 	
 	private final GravityWaveCollector actionEffectCollector;
+
+	List<WormHole> wormHoles = new ArrayList<>();
 	
 	public GameState(Game game, int playerId, GameActionApi gameActionApi) {
 		this.playerId = playerId;
@@ -85,6 +88,11 @@ public class GameState {
 	}
 
 	@Synchronized
+	public void wormHoleBuilt(WormHole wormhole) {
+		wormHoles.add(wormhole);
+	}
+
+	@Synchronized
 	public void spaceMissionFailed(int affectedMapObjectId) {
 		tryFindPlayerPlanet(affectedMapObjectId)
 			.ifPresent(p -> p.spaceMissionFailed());
@@ -126,7 +134,7 @@ public class GameState {
 	}
 	
 	@Synchronized
-	public void buildWormHole(int xa, int ya, int xb, int yb) {
+	public void buildWormHole(long xa, long ya, long xb, long yb) {
 		val action = actionApi.buildWormHole(xa, ya, xb, yb);
 		
 		initiatedActions.put(action.getRefId(), action);
