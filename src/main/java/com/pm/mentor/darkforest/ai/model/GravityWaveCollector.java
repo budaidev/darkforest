@@ -32,7 +32,10 @@ public class GravityWaveCollector {
     private final int playerId;
     private final GameSettings settings;
 
-    public GravityWaveCollector(List<Player> availablePlayers, List<Planet> planets, int mapWidth, int mapHeight, double lightSpeed, int playerId, GameSettings settings) {
+    public GravityWaveCollector(List<Player> availablePlayers, List<Planet> planets, int playerId, GameSettings settings) {
+    	val mapHeight = settings.getHeight();
+    	val mapWidth = settings.getWidth();
+
         for (val player : availablePlayers) {
             playerEffectCollectors.put(player.getId(), new PlayerActionEffectCollector());
         }
@@ -40,8 +43,8 @@ public class GravityWaveCollector {
         this.planets = planets;
         this.playerId = playerId;
 
+        lightSpeed = settings.getTimeOfOneLightYear();
         maxEventLifetime = Math.sqrt(mapWidth * mapWidth + mapHeight * mapHeight) * lightSpeed;
-        this.lightSpeed = lightSpeed;
 
         this.settings = settings;
     }

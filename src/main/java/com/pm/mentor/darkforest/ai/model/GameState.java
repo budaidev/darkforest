@@ -46,7 +46,7 @@ public class GameState {
 		planets = game.getWorld().getPlanets();
 		actionApi = gameActionApi;
 		
-		actionEffectCollector = new GravityWaveCollector(game.getPlayers(), planets, settings.getWidth(), settings.getHeight(), settings.getTimeOfOneLightYear(), playerId, settings);
+		actionEffectCollector = new GravityWaveCollector(game.getPlayers(), planets, playerId, settings);
 	}
 	
 	public int getMaxConcurrentActionCount() {
