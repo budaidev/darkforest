@@ -1,5 +1,7 @@
 package com.pm.mentor.darkforest.ai.model;
 
+import com.pm.mentor.darkforest.util.MathUtil;
+import com.pm.mentor.darkforest.util.Vector;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,186 +16,217 @@ import com.loxon.javachallenge.challenge.game.settings.GameSettings;
 import com.pm.mentor.darkforest.util.Angle;
 import com.pm.mentor.darkforest.util.Point;
 
+import java.util.stream.Collectors;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GravityWaveCollector {
-	// events older than this period are not considered during source calculation
-	private final double maxEventLifetime;
-	private final double lightSpeed;
-	private final Map<Integer, PlayerActionEffectCollector> playerEffectCollectors = new HashMap<>();
-	private final List<Planet> planets;
-	private final int playerId;
-	private final GameSettings settings;
+    // events older than this period are not considered during source calculation
+    private final double maxEventLifetime;
+    private final double lightSpeed;
+    private final Map<Integer, PlayerActionEffectCollector> playerEffectCollectors = new HashMap<>();
+    private final List<Planet> planets;
+    private final int playerId;
+    private final GameSettings settings;
 
-	public GravityWaveCollector(List<Player> availablePlayers, List<Planet> planets, int mapWidth, int mapHeight, double lightSpeed, int playerId, GameSettings settings) {
-		for (val player : availablePlayers) {
-			playerEffectCollectors.put(player.getId(), new PlayerActionEffectCollector());
-		}
+    public GravityWaveCollector(List<Player> availablePlayers, List<Planet> planets, int mapWidth, int mapHeight, double lightSpeed, int playerId, GameSettings settings) {
+        for (val player : availablePlayers) {
+            playerEffectCollectors.put(player.getId(), new PlayerActionEffectCollector());
+        }
 
-		this.planets = planets;
-		this.playerId = playerId;
+        this.planets = planets;
+        this.playerId = playerId;
 
-		maxEventLifetime = Math.sqrt(mapWidth * mapWidth + mapHeight * mapHeight) * lightSpeed;
-		this.lightSpeed = lightSpeed;
+        maxEventLifetime = Math.sqrt(mapWidth * mapWidth + mapHeight * mapHeight) * lightSpeed;
+        this.lightSpeed = lightSpeed;
 
-		this.settings = settings;
-	}
+        this.settings = settings;
+    }
 
-	public CollectResult collect(GravityWaveCrossing effect) {
-		return playerEffectCollectors.get(effect.getInflictingPlayer())
-				.collect(effect);
-	}
+    public CollectResult collect(GravityWaveCrossing effect) {
+        return playerEffectCollectors.get(effect.getInflictingPlayer())
+                .collect(effect);
+    }
 
-	private double distanceBetween(Planet a, Planet b) {
-		return a.distance(b);
-	}
+    private double distanceBetween(Planet a, Planet b) {
+        return a.distance(b);
+    }
 
-	private Planet findPlanet(int id) {
-		return planets.stream()
-				.filter(p -> p.getId() == id)
-				.findAny()
-				.get();
-	}
+    private Planet findPlanet(int id) {
+        return planets.stream()
+                .filter(p -> p.getId() == id)
+                .findAny()
+                .get();
+    }
 
-	private class PlayerActionEffectCollector {
-		private final Map<GravityWaveCause, EffectCollector> effectCollectors = new HashMap<>();
+    public List<Planet> filterPossiblePlanets(List<Planet> planets,
+                                              GravityWaveCrossing pastEffect,
+                                              GravityWaveCrossing currentEffect,
+                                              int precision) {
+        Planet planetA = findPlanet(pastEffect.getAffectedMapObjectId());
+        Planet planetB = findPlanet(currentEffect.getAffectedMapObjectId());
 
-		public CollectResult collect(GravityWaveCrossing effect) {
-			if (!effectCollectors.containsKey(effect.getCause())) {
-				effectCollectors.put(effect.getCause(), new EffectCollector(effect.getCause()));
-			}
+        double error = precision / 100.0 * 2 * Math.PI;
 
-			return effectCollectors.get(effect.getCause())
-					.collect(effect);
-		}
-	}
+        double past_dir_center = pastEffect.getDirection();
+        double past_dir_up = pastEffect.getDirection() + error;
+        double past_dir_down = pastEffect.getDirection() - error;
 
-	private class EffectCollector {
-		private final List<GravityWaveCrossing> observedEffects = new ArrayList<>();
+        double current_dir_center = currentEffect.getDirection();
+        double current_dir_up = currentEffect.getDirection() + error;
+        double current_dir_down = currentEffect.getDirection() - error;
 
-		private final double error;
+        Point pA = new Point(planetA.getX(), planetA.getY());
+        Point pB = new Point(planetB.getX(), planetB.getY());
 
-		public EffectCollector(GravityWaveCause cause) {
-			error = cause == GravityWaveCause.PASSIVITY
-					? settings.getPassivityFleshPrecision()
-					: settings.getGravityWaveSourceLocationPrecision();
-		}
+        return planets.stream().filter(
+                        x -> MathUtil.isInsideTheTriangle(
+                                pA,
+                                pA.move(past_dir_up, settings.getWidth()),
+                                pA.move(past_dir_down, settings.getWidth()),
+                                new Point(x.getX(), x.getY())))
+                .filter(
+                        x -> MathUtil.isInsideTheTriangle(
+                                pB,
+                                pB.move(current_dir_up, settings.getWidth()),
+                                pB.move(current_dir_down, settings.getWidth()),
+                                new Point(x.getX(), x.getY())))
+                .collect(Collectors.toList());
+    }
 
-		public CollectResult collect(GravityWaveCrossing currentEffect) {
-			val currentTime = currentEffect.getTime();
+    private class PlayerActionEffectCollector {
+        private final Map<GravityWaveCause, EffectCollector> effectCollectors = new HashMap<>();
 
-			CollectResult result = iterateEffectsBackwards(pastEffect -> {
-				val timeBetweenEffects = currentTime - pastEffect.getTime();
-				// no need to continue, the other effects are too old to be correlated with the current one
-				if (maxEventLifetime <= timeBetweenEffects) {
-					// continue -> false
-					return new CollectResult(true, null);
-				}
+        public CollectResult collect(GravityWaveCrossing effect) {
+            if (!effectCollectors.containsKey(effect.getCause())) {
+                effectCollectors.put(effect.getCause(), new EffectCollector(effect.getCause()));
+            }
 
-				val planetA = findPlanet(pastEffect.getAffectedMapObjectId());
-				val planetB = findPlanet(currentEffect.getAffectedMapObjectId());
+            return effectCollectors.get(effect.getCause())
+                    .collect(effect);
+        }
+    }
 
-				// the planets are the same so these effects must come from different sources
-				if (planetA.getId() == planetB.getId()) {
-					return new CollectResult(false, null);
-				}
+    private class EffectCollector {
+        private final List<GravityWaveCrossing> observedEffects = new ArrayList<>();
 
-				for (val potentialSource : planets) {
-					if (shallSkipPlanet(potentialSource)) {
-						continue;
-					}
+        private final double error;
 
-					// skip the planets observing the events ()
-					if (potentialSource.getId() == planetA.getId() || potentialSource.getId() == planetB.getId()) {
-						continue;
-					}
+        public EffectCollector(GravityWaveCause cause) {
+            error = cause == GravityWaveCause.PASSIVITY
+                    ? settings.getPassivityFleshPrecision()
+                    : settings.getGravityWaveSourceLocationPrecision();
+        }
 
-					val distanceToA = distanceBetween(potentialSource, planetA);
-					val distanceToB = distanceBetween(potentialSource, planetB);
+        public CollectResult collect(GravityWaveCrossing currentEffect) {
+            val currentTime = currentEffect.getTime();
 
-					val distanceDifference = Math.abs(distanceToB - distanceToA);
-					val expectedObservationTimeDifference = distanceDifference * lightSpeed;
+            CollectResult result = iterateEffectsBackwards(pastEffect -> {
+                val timeBetweenEffects = currentTime - pastEffect.getTime();
+                // no need to continue, the other effects are too old to be correlated with the current one
+                if (maxEventLifetime <= timeBetweenEffects) {
+                    // continue -> false
+                    return new CollectResult(true, null);
+                }
 
-					if (isCloseEnough(expectedObservationTimeDifference, timeBetweenEffects)) {
-						log.trace(String.format("considering potential source planet: %s", potentialSource.toString()));
+                val planetA = findPlanet(pastEffect.getAffectedMapObjectId());
+                val planetB = findPlanet(currentEffect.getAffectedMapObjectId());
 
-						val sourcePoint = new Point(potentialSource.getX(), potentialSource.getY());
-						val pointA = new Point(planetA.getX(), planetA.getY());
-						val pointB = new Point(planetB.getX(), planetB.getY());
+                // the planets are the same so these effects must come from different sources
+                if (planetA.getId() == planetB.getId()) {
+                    return new CollectResult(false, null);
+                }
 
-						val expectedAngleA = pointA.minus(sourcePoint).angleToNorth().deg;
-						val actualAngleA = new Angle(pastEffect.getDirection()).deg;
+                for (val potentialSource : planets) {
+                    if (shallSkipPlanet(potentialSource)) {
+                        continue;
+                    }
 
-						if (Math.abs(expectedAngleA - actualAngleA) > error) {
-							log.trace(String.format("expected angle A: %f, actual: %f", expectedAngleA, actualAngleA));
-							continue;
-						}
+                    // skip the planets observing the events ()
+                    if (potentialSource.getId() == planetA.getId() || potentialSource.getId() == planetB.getId()) {
+                        continue;
+                    }
 
-						val expectedAngleB = pointB.minus(sourcePoint).angleToNorth().deg;
-						val actualAngleB = new Angle(currentEffect.getDirection()).deg;
+                    val distanceToA = distanceBetween(potentialSource, planetA);
+                    val distanceToB = distanceBetween(potentialSource, planetB);
 
-						if (Math.abs(expectedAngleB - actualAngleB) > error) {
-							log.trace(String.format("expected angle B: %f, actual: %f", expectedAngleB, actualAngleB));
-							continue;
-						}
+                    val distanceDifference = Math.abs(distanceToB - distanceToA);
+                    val expectedObservationTimeDifference = distanceDifference * lightSpeed;
 
-						log.trace(String.format("This effect is originated from planet %d", potentialSource.getId()));
-						System.out.println(String.format("This effect is originated from planet %d", potentialSource.getId()));
+                    if (isCloseEnough(expectedObservationTimeDifference, timeBetweenEffects)) {
+                        log.trace(String.format("considering potential source planet: %s", potentialSource.toString()));
 
-						return new CollectResult(true, potentialSource);
-					}
-				}
+                        val sourcePoint = new Point(potentialSource.getX(), potentialSource.getY());
+                        val pointA = new Point(planetA.getX(), planetA.getY());
+                        val pointB = new Point(planetB.getX(), planetB.getY());
 
-				return new CollectResult(false, null);
-			});
+                        val expectedAngleA = pointA.minus(sourcePoint).angleToNorth().deg;
+                        val actualAngleA = new Angle(pastEffect.getDirection()).deg;
 
-			observedEffects.add(currentEffect);
+                        if (Math.abs(expectedAngleA - actualAngleA) > error) {
+                            log.trace(String.format("expected angle A: %f, actual: %f", expectedAngleA, actualAngleA));
+                            continue;
+                        }
 
-			return result;
-		}
+                        val expectedAngleB = pointB.minus(sourcePoint).angleToNorth().deg;
+                        val actualAngleB = new Angle(currentEffect.getDirection()).deg;
 
+                        if (Math.abs(expectedAngleB - actualAngleB) > error) {
+                            log.trace(String.format("expected angle B: %f, actual: %f", expectedAngleB, actualAngleB));
+                            continue;
+                        }
 
-		private CollectResult iterateEffectsBackwards(Function<GravityWaveCrossing, CollectResult> action) {
-			val backwardsIterator = observedEffects.listIterator(observedEffects.size());
+                        log.trace(String.format("This effect is originated from planet %d", potentialSource.getId()));
+                        return new CollectResult(true, potentialSource);
+                    }
+                }
 
-			while (backwardsIterator.hasPrevious()) {
-				CollectResult res = action.apply(backwardsIterator.previous());
-				if (res.isSuccessful()) {
-					if (res.getPossibleSource() != null) {
-						return res;
-					} else {
-						return unsuccessfulResult();
-					}
+                return new CollectResult(false, null);
+            });
 
-				}
-			}
-			return unsuccessfulResult();
-		}
-	}
+            observedEffects.add(currentEffect);
 
-	private CollectResult unsuccessfulResult() {
-		return new CollectResult(false, null);
-	}
-
+            return result;
+        }
 
 
+        private CollectResult iterateEffectsBackwards(Function<GravityWaveCrossing, CollectResult> action) {
+            val backwardsIterator = observedEffects.listIterator(observedEffects.size());
+
+            while (backwardsIterator.hasPrevious()) {
+                CollectResult res = action.apply(backwardsIterator.previous());
+                if (res.isSuccessful()) {
+                    if (res.getPossibleSource() != null) {
+                        return res;
+                    } else {
+                        return unsuccessfulResult();
+                    }
+
+                }
+            }
+            return unsuccessfulResult();
+        }
+    }
+
+    private CollectResult unsuccessfulResult() {
+        return new CollectResult(false, null);
+    }
 
 
-	private boolean shallSkipPlanet(Planet planet) {
-		// TODO
-		// skip planet if it is known to be destroyed
+    private boolean shallSkipPlanet(Planet planet) {
+        // TODO
+        // skip planet if it is known to be destroyed
 
-		if (planet.getPlayer() == playerId) {
-			return false;
-		}
+        if (planet.getPlayer() == playerId) {
+            return false;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	private boolean isCloseEnough(double a, double b) {
-		return Math.abs(a-b) < 2;
-	}
+    private boolean isCloseEnough(double a, double b) {
+        return Math.abs(a - b) < 2;
+    }
 
 }

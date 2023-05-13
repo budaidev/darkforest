@@ -98,9 +98,14 @@ public class GravityWaveCollectorTest {
         planets.add(pae1.planet);
         planets.add(pae2.planet);
 
+        planets.add(createPlanet(10005, new Point(10, 10)));
+        planets.add(createPlanet(10005, new Point(10, 50)));
+
         gravityWaveCollector = new GravityWaveCollector(
                 initPlayers(), planets, 112, 60, 40, 1, settings
         );
+
+        System.out.println(gravityWaveCollector.filterPossiblePlanets(planets, pae1.effect, pae2.effect, 5));
 
         CollectResult res1 = gravityWaveCollector.collect(pae1.effect);
         CollectResult res2 = gravityWaveCollector.collect(pae2.effect);
@@ -121,8 +126,8 @@ public class GravityWaveCollectorTest {
         Planet planet = createPlanet(10000, source);
         planets.add(planet);
 
-        PlanetAndEffect pae1 = createReceiverPlanets(source, Math.PI/2, 40, 10001, 40);
-        PlanetAndEffect pae2 = createReceiverPlanets(source, Math.PI, 50, 10002, 40);
+        PlanetAndEffect pae1 = createReceiverPlanets(source, new Point(70,30), 10001, 40);
+        PlanetAndEffect pae2 = createReceiverPlanets(source, new Point(30,80), 10002, 40);
 
         planets.add(pae1.planet);
         planets.add(pae2.planet);

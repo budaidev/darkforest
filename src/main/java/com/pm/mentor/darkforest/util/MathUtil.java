@@ -10,6 +10,7 @@ public class MathUtil {
 
     public static boolean isInsideTheTriangle(Point p1, Point p2, Point p3, Point pt)
     {
+        System.out.println("p1: " + p1 + " p2: " + p2 + " p3: " + p3 + " pt: " + pt);
         /* Calculate area of triangle ABC */
         double A = area (p1, p2, p3);
 
