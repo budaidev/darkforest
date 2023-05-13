@@ -1,5 +1,7 @@
 package com.loxon.javachallenge.challenge.game.model;
 
+import java.util.List;
+
 import lombok.Data;
 
 /**
@@ -35,4 +37,6 @@ public class GameStats {
 	 * A kivédett MBH-k száma a játék végén.
 	 */
 	private int numDeflectedMBH;
+
+	private List<PlayerResult> playerResults;
 }
