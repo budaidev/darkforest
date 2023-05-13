@@ -1,7 +1,14 @@
 package com.pm.mentor.darkforest.service;
 
+import com.loxon.javachallenge.challenge.game.event.action.BuildWormHoleAction;
+import com.loxon.javachallenge.challenge.game.event.action.GameActionType;
+import com.loxon.javachallenge.challenge.game.event.actioneffect.WormHoleBuiltEffect;
+import com.loxon.javachallenge.challenge.game.model.WormHole;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -39,6 +46,9 @@ public class AIContainer {
 	private AI ai;
 
 	private int playerId;
+
+	private List<WormHole> wormholeToBuild = new ArrayList<>();
+	private List<WormHole> wormholeHaveBuilt = new ArrayList<>();
 
 	public AIContainer(ManualAI ai, GameStateHolder gameStateHolder) {
 
@@ -105,6 +115,18 @@ public class AIContainer {
 					
 					return;
 				}
+
+				if(action.getType() == GameActionType.BUILD_WORM_HOLE) {
+					BuildWormHoleAction wormholeAction = (BuildWormHoleAction) action;
+					WormHole hole = WormHole.builder()
+							.id(wormholeAction.getTargetId())
+							.x(wormholeAction.getXa())
+							.y(wormholeAction.getYa())
+							.xb(wormholeAction.getXb())
+							.yb(wormholeAction.getYb())
+							.build();
+					wormholeToBuild.add(hole);
+				}
 				
 				// remove the action from the initiated actions list
 				gameState.getInitiatedActions().remove(action.getRefId());
@@ -137,6 +159,16 @@ public class AIContainer {
 
 				if (actionEffect.getEffectChain().contains(ActionEffectType.SPACE_MISSION_SUCCESS)) {
 					gameState.spaceMissionSuccessful(actionEffect.getAffectedMapObjectId());
+				} else if(actionEffect.getEffectChain().contains(ActionEffectType.WORM_HOLE_BUILT)) {
+					WormHoleBuiltEffect effect = (WormHoleBuiltEffect) actionEffect;
+					Optional<WormHole> op = wormholeToBuild.stream().filter(x -> x.getId() == effect.getWormHoleId()).findFirst();
+					if(op.isPresent()) {
+						WormHole hole = op.get();
+						wormholeHaveBuilt.add(hole);
+						wormholeToBuild.remove(hole);
+						gameState.wormHoleBuilt(hole);
+						gameStateHolder.updateWormholes(gameState.getWormHoles());
+					}
 				}
 				
 				if (gameState.isEffectPlayerRelated(actionEffect) ) {

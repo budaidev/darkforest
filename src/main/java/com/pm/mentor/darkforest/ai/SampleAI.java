@@ -14,6 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 public class SampleAI implements AI {
 
 	private GameState gameState;
+
+	private int wormholeNumber = 0;
+	private int startingPlanetId = 0;
 	
 	@Getter
 	private boolean running = false;
@@ -24,6 +27,11 @@ public class SampleAI implements AI {
 		this.gameState = gameState;
 		
 		running = true;
+
+		wormholeNumber = 0;
+		startingPlanetId = gameState.getPlayerPlanets().get(0).getId();
+
+		log.info("My starting planet id is {}", startingPlanetId);
 	}
 
 	@Override
@@ -65,9 +73,31 @@ public class SampleAI implements AI {
 			
 			return;
 		}
+
+		if(gameState.getPlayerPlanets().size() > 1) {
+			AIPlanet planet = gameState.getPlayerPlanets().stream()
+				.filter(p -> p.getId() != startingPlanetId)
+					.findFirst().get();
+			buildWormhole(planet);
+		}
+
 		
 		sendMissionsToNearbyPlanets();
 		missileShower();
+	}
+
+	private void buildWormhole(AIPlanet startPlanet) {
+		if(wormholeNumber < 1) {
+			log.trace("buildWormhole from " + startPlanet.getId() + " to center");
+
+			int x_center = gameState.getSettings().getWidth() / 2;
+			int y_center = gameState.getSettings().getHeight() / 2;
+
+			gameState.buildWormHole(startPlanet.getPos().getX(), startPlanet.getPos().getY(), x_center, y_center);
+
+			wormholeNumber++;
+		}
+
 	}
 	
 	private void sendMissionsToNearbyPlanets() {
