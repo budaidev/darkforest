@@ -4,7 +4,7 @@ import lombok.val;
 
 public class Vector {
 	
-	private static final Vector North = new Vector(0, 1);
+	private static final Vector North = new Vector(0, -1);
 	
 	public final double x;
 	public final double y;

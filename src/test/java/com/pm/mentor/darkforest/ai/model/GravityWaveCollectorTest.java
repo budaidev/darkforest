@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffectType;
 import com.loxon.javachallenge.challenge.game.event.actioneffect.GravityWaveCrossing;
 import com.loxon.javachallenge.challenge.game.model.GravityWaveCause;
 import com.loxon.javachallenge.challenge.game.model.Planet;
@@ -11,6 +12,9 @@ import com.loxon.javachallenge.challenge.game.model.Player;
 import com.loxon.javachallenge.challenge.game.settings.GameSettings;
 import com.pm.mentor.darkforest.util.Point;
 import com.pm.mentor.darkforest.util.Vector;
+
+import lombok.val;
+
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -43,7 +47,7 @@ public class GravityWaveCollectorTest {
         return players;
     }
 
-    private GravityWaveCrossing createEffect(int time, double dir, int affectedId) {
+    private GravityWaveCrossing createSpaceMissionPassingEffect(long time, double dir, int affectedId) {
         return GravityWaveCrossing.builder()
                 .sourceId(0)
                 .cause(GravityWaveCause.SPACE_MISSION)
@@ -51,6 +55,7 @@ public class GravityWaveCollectorTest {
                 .affectedMapObjectId(affectedId)
                 .inflictingPlayer(2)
                 .time(time)
+                .effectChain(List.of(ActionEffectType.SPACE_MISSION_GRAWITY_WAVE_PASSING))
                 .build();
     }
 
@@ -58,7 +63,7 @@ public class GravityWaveCollectorTest {
 
         Point p = source.move(dir, dist);
         Planet planet = createPlanet(planetId, p);
-        GravityWaveCrossing effect = createEffect((int)(dist*lightspeed), dir, planetId);
+        GravityWaveCrossing effect = createSpaceMissionPassingEffect((int)(dist*lightspeed), dir, planetId);
 
         return new PlanetAndEffect(planet, effect);
     }
@@ -68,7 +73,7 @@ public class GravityWaveCollectorTest {
         double dir = v.angleToNorth().rad;
         double dist = v.magnitude;
         Planet planet = createPlanet(planetId, target);
-        GravityWaveCrossing effect = createEffect((int)(dist*lightspeed), dir, planetId);
+        GravityWaveCrossing effect = createSpaceMissionPassingEffect((int)(dist*lightspeed), dir, planetId);
 
         return new PlanetAndEffect(planet, effect);
     }
@@ -94,8 +99,8 @@ public class GravityWaveCollectorTest {
         Planet planet = createPlanet(10000, source);
         planets.add(planet);
 
-        PlanetAndEffect pae1 = createReceiverPlanets(source, Math.PI/2, 40, 10001, 40);
-        PlanetAndEffect pae2 = createReceiverPlanets(source, Math.PI/2, 50, 10002, 40);
+        PlanetAndEffect pae1 = createReceiverPlanets(source, Math.PI/2, 40, 10001, 80);
+        PlanetAndEffect pae2 = createReceiverPlanets(source, Math.PI/2, 50, 10002, 80);
 
         planets.add(pae1.planet);
         planets.add(pae2.planet);
@@ -128,8 +133,8 @@ public class GravityWaveCollectorTest {
         Planet planet = createPlanet(10000, source);
         planets.add(planet);
 
-        PlanetAndEffect pae1 = createReceiverPlanets(source, new Point(70,30), 10001, 40);
-        PlanetAndEffect pae2 = createReceiverPlanets(source, new Point(30,80), 10002, 40);
+        PlanetAndEffect pae1 = createReceiverPlanets(source, new Point(70,30), 10001, 80);
+        PlanetAndEffect pae2 = createReceiverPlanets(source, new Point(30,80), 10002, 80);
 
         planets.add(pae1.planet);
         planets.add(pae2.planet);
@@ -157,8 +162,8 @@ public class GravityWaveCollectorTest {
         Planet planet = createPlanet(10000, source);
         planets.add(planet);
 
-        PlanetAndEffect pae1 = createReceiverPlanets(source, new Point(40, 40), 10001, 40);
-        PlanetAndEffect pae2 = createReceiverPlanets(source, new Point(30, 60), 10002, 40);
+        PlanetAndEffect pae1 = createReceiverPlanets(source, new Point(40, 40), 10001, 80);
+        PlanetAndEffect pae2 = createReceiverPlanets(source, new Point(30, 60), 10002, 80);
 
         planets.add(pae1.planet);
         planets.add(pae2.planet);
@@ -173,5 +178,34 @@ public class GravityWaveCollectorTest {
         assertTrue(res2.isSuccessful());
         assertEquals(30, res2.getPossibleSource().getX());
         assertEquals(30, res2.getPossibleSource().getY());
+    }
+    
+    @Test
+    public void sourcePlusTwoObservations_ShouldSucceed() {
+    	// source planet: 
+    	// 2273, pos=(13, 34), emitted at: 1683997776591
+    	
+    	// observers
+    	// 2302, pos(18, 26), observed at: 1683997777345 angle: 0.7653616315096966
+    	// 2306, pos(20, 33), observed at: 1683997777156 angle: 1.6454067077991554
+    	
+    	GameSettings settings = initSettings();
+    	val sourcePlanet = createPlanet(2273, new Point(13, 34));
+    	val observer1 = createPlanet(2302, new Point(18, 26));
+    	val observer2 = createPlanet(2306, new Point(20, 33));
+    	
+    	List<Planet> planets = new ArrayList<>();
+    	planets.add(sourcePlanet);
+    	planets.add(observer1);
+    	planets.add(observer2);
+
+    	gravityWaveCollector = new GravityWaveCollector(initPlayers(), planets, 112, 60, 40.0, 57, settings);
+    	
+    	val res1 = gravityWaveCollector.collect(createSpaceMissionPassingEffect(1683997777156L, 1.6454067077991554, 2306));
+    	val res2 = gravityWaveCollector.collect(createSpaceMissionPassingEffect(1683997777345L, 0.7653616315096966, 2302));
+    	
+    	assertFalse(res1.isSuccessful());
+    	assertTrue(res2.isSuccessful());
+    	assertEquals(2273, res2.getPossibleSource().getId());
     }
 }

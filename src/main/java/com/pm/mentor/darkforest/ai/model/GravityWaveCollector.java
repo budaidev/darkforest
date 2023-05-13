@@ -1,23 +1,24 @@
 package com.pm.mentor.darkforest.ai.model;
 
-import com.pm.mentor.darkforest.util.MathUtil;
-import com.pm.mentor.darkforest.util.Vector;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffect;
+import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffectType;
 import com.loxon.javachallenge.challenge.game.event.actioneffect.GravityWaveCrossing;
 import com.loxon.javachallenge.challenge.game.model.GravityWaveCause;
 import com.loxon.javachallenge.challenge.game.model.Planet;
 import com.loxon.javachallenge.challenge.game.model.Player;
 import com.loxon.javachallenge.challenge.game.settings.GameSettings;
 import com.pm.mentor.darkforest.util.Angle;
+import com.pm.mentor.darkforest.util.MathUtil;
 import com.pm.mentor.darkforest.util.Point;
 
-import java.util.stream.Collectors;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -122,8 +123,8 @@ public class GravityWaveCollector {
 
         public EffectCollector(GravityWaveCause cause) {
             error = cause == GravityWaveCause.PASSIVITY
-                    ? settings.getPassivityFleshPrecision()
-                    : settings.getGravityWaveSourceLocationPrecision();
+                    ? 360 * settings.getPassivityFleshPrecision() / 100
+                    : 360 * settings.getGravityWaveSourceLocationPrecision() / 100;
         }
 
         public CollectResult collect(GravityWaveCrossing currentEffect) {
@@ -159,7 +160,7 @@ public class GravityWaveCollector {
                     val distanceToB = distanceBetween(potentialSource, planetB);
 
                     val distanceDifference = Math.abs(distanceToB - distanceToA);
-                    val expectedObservationTimeDifference = distanceDifference * lightSpeed;
+                    val expectedObservationTimeDifference = distanceDifference * getEffectSpeed(currentEffect);
 
                     if (isCloseEnough(expectedObservationTimeDifference, timeBetweenEffects)) {
                         log.trace(String.format("considering potential source planet: %s", potentialSource.toString()));
@@ -226,7 +227,7 @@ public class GravityWaveCollector {
         // skip planet if it is known to be destroyed
 
         if (planet.getPlayer() == playerId) {
-            return false;
+            return true;
         }
 
         return false;
@@ -236,4 +237,11 @@ public class GravityWaveCollector {
         return Math.abs(a - b) < 2;
     }
 
+    private double getEffectSpeed(ActionEffect effect) {
+    	if (effect.getEffectChain().contains(ActionEffectType.SPACE_MISSION_GRAWITY_WAVE_PASSING)) {
+    		return lightSpeed * 2;
+    	}
+    	
+    	return lightSpeed;
+    }
 }
