@@ -87,7 +87,7 @@ class WebSocketManager {
      * @return {void}
      */
     #errorHandler(event) {
-        console.error(event);
+        // console.error(event);
 
         if (this.#connection.readyState === WebSocket.CLOSED || this.#connection.readyState === WebSocket.CLOSING) {
             this.#startConnecting();

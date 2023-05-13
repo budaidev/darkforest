@@ -61,36 +61,6 @@
             border: 1px solid #ccc;
         }
 
-        .planet {
-            position: absolute;
-            border-radius: 50%;
-            transition: transform 0.2s;
-            translate: var(--render-area-padding) var(--render-area-padding);
-        }
-
-        .effect-line {
-            translate: calc(var(--render-area-padding) - 12px) calc(var(--render-area-padding) + 12px);
-            position: absolute;
-            height: 0px;
-            /* Apply a border to the line to represent the stroke */
-            border-top: 1px solid black;
-        }
-
-        .planet-popup {
-            position: relative;
-            background-color: white;
-            border: 1px solid black;
-            padding: 10px;
-            display: none;
-            white-space: nowrap;
-            z-index: 10;
-        }
-
-        .planet:hover .planet-popup {
-            display: inline-block;
-            z-index: 1;
-        }
-
         .wormhole {
             position: relative;
             background-color: black;
@@ -119,11 +89,12 @@
 
         #container {
             border: solid black;
-            height: 100%;
+            max-height: 900px;
             background-color: #EEEEEE;
             box-sizing: border-box; /* add this line */
-            padding: var(--render-area-padding);
+            padding: 30px;
             position: relative;
+            overflow: hidden;
         }
 
         main {
@@ -133,6 +104,11 @@
             box-sizing: border-box; /* add this line */
             padding: 10px; /* add your desired padding */
         }
+
+        svg {
+            overflow: visible;
+        }
+
     </style>
 </head>
 <body>
@@ -189,7 +165,7 @@
 <script type="text/javascript">
 
     const gameManager = new GameManager();
-    const uiController = new UIController('container');
+    const uiController = new UISVGController('container');
     const webSocketManager = new WebSocketManager('txbConnectedToServer');
 
     webSocketManager.subscribeToMessage((message) => {
@@ -228,11 +204,17 @@
     const connectWebSocket = async () =>
     	await gameManager.connectWebSocket();
   
-    const startGame = async () =>
+    const startGame = async () => {
     	await gameManager.startGame();
+
+        uiController.enableAnimation();
+    }
   
-    const stopGame = async () =>
+    const stopGame = async () => {
     	await gameManager.stopGame();
+
+        uiController.disableAnimation();
+    }
 
     const getBots = async () =>
         await gameManager.getBots();

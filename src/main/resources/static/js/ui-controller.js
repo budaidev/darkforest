@@ -79,11 +79,88 @@ class Position {
     }
 }
 
-class UIController {
-    static #PlanetSize = 25;
+class SVGFactory {
+    static #XMLNS = 'http://www.w3.org/2000/svg';
+
+    /**
+     * @param {Object} properties 
+     * @returns {Element}
+     */
+    static createViewBox(width, height) {
+        const svgElement = document.createElementNS(SVGFactory.#XMLNS, 'svg');
+
+        const properties = {
+            viewBox: `0 0 ${width} ${height}`,
+            preserveAspectRatio: 'none'
+        };
+
+        SVGFactory.applyProperties(svgElement, properties);
+
+        return svgElement;
+    }
+
+    /**
+     * @param {Object} properties 
+     * @returns {Element}
+     */
+    static createElement(name, properties) {
+        const svgElement = document.createElementNS(SVGFactory.#XMLNS, name);
+        SVGFactory.applyProperties(svgElement, properties);
+
+        return svgElement;
+    }
+
+    /**
+     * @param {Element} element 
+     * @param {Object | undefined} properties 
+     * @returns {void}
+     */
+    static applyProperties(element, properties = undefined) {
+        if (properties) {
+            for (const propName in properties) {
+                const propValue = properties[propName];
+
+                if (propValue !== undefined) {
+                    element.setAttributeNS(null, propName, propValue);
+                } else {
+                    element.removeAttributeNS(null, propName);
+                }
+            }
+        }
+    }
+}
+
+/**
+ * @param {string} elementId 
+ */
+const show = (elementId) => {
+    SVGFactory.applyProperties(document.getElementById(elementId), {
+        visibility: undefined
+    });
+}
+
+/**
+ * @param {string} elementId 
+ */
+const hide = (elementId) => {
+    SVGFactory.applyProperties(document.getElementById(elementId), {
+        visibility: 'hidden'
+    });
+}
+
+class UISVGController {
+    static #PlanetSize = 12.5;
     static #Colors = ["gray", "red", "blue", "green", "yellow", "orange", "purple", "pink", "brown"];
+    static #PopupFontSize = 14;
+    static #PopupPadding = 5;
+
+    static #AnimationIntervalMs = 1000;
+    static #RemoveWavesAfterMs = 6000;
+
+    static #ShowPlayerActionEffects = true;
 
     #container;
+    #svgContainer;
 
     #mapWidth = undefined;
     #mapHeight = undefined;
@@ -93,10 +170,12 @@ class UIController {
 
     #resizeObserver;
 
-    #planetElements;
-    #wormholeElements;
     #planets;
-    #wormholes;
+    #planetElements;
+    #planetPopupElements;
+    #waveElements;
+
+    #allowAnimation = true;
 
     #playerDict = {
         0: 0
@@ -110,22 +189,24 @@ class UIController {
     constructor(containerId) {
         this.#container = document.getElementById(containerId);
 
-        this.#containerWidth = this.#container.clientWidth;
-        this.#containerHeight = this.#container.clientHeight;
-
         this.#reset();
 
         this.#resizeObserver = new ResizeObserver(() => {
             this.#containerWidth = this.#container.clientWidth;
             this.#containerHeight = this.#container.clientHeight;
 
+            SVGFactory.applyProperties(this.#svgContainer, {
+                viewBox: `0 0 ${this.#containerWidth} ${this.#containerHeight}`,
+                preserveAspectRatio: 'none'
+            });
+
             if (this.#mapWidth !== undefined && this.#mapHeight !== undefined) {
                 this.#renderPlanets(this.#planets.values());
-                this.#renderWormholes(this.#wormholes.values());
             }
         });
 
         this.#resizeObserver.observe(this.#container);
+        setInterval(this.#animate.bind(this), UISVGController.#AnimationIntervalMs);
     }
 
     /**
@@ -145,11 +226,12 @@ class UIController {
         } else if (gameEvent.eventType === 'ACTION_EFFECT') {
             const actionEffect = gameEvent.actionEffect;
 
-            if (actionEffect.p !== this.#playerId) {
+            if (UISVGController.#ShowPlayerActionEffects || actionEffect.p !== this.#playerId) {
                 const planet = this.#planets.get(actionEffect.id);
-                const planetPosition = this.#calculateRenderedPosition(planet.x, planet.y, UIController.#PlanetSize);
+                const planetPosition = this.#calculateRenderedPosition(planet.x, planet.y);
+                const color = UISVGController.#Colors[this.#playerDict[actionEffect.p]]
 
-                this.#drawLine(planetPosition.x, planetPosition.y, 5*10, actionEffect.dir);
+                this.#drawLine(planetPosition.x, planetPosition.y, 50, actionEffect.dir, color);
             }
         } else if (gameEvent.eventType === 'CONNECTION_RESULT') {
             // this.#playerId = gameEvent.connectionResult.playerId;
@@ -158,10 +240,14 @@ class UIController {
         if (gameEvent.planets && gameEvent.planets.length > 0) {
             this.#renderPlanets(gameEvent.planets);
         }
+    }
 
-        if (gameEvent.wormholes && gameEvent.wormholes.length > 0) {
-            this.#renderWormholes(gameEvent.wormholes);
-        }
+    enableAnimation() {
+        this.#allowAnimation = true;
+    }
+
+    disableAnimation() {
+        this.#allowAnimation = false;
     }
 
     /**
@@ -169,11 +255,13 @@ class UIController {
      */
     #reset() {
         this.#container.innerHTML = '';
+        this.#svgContainer = SVGFactory.createViewBox(this.#containerWidth, this.#containerHeight);
+        this.#container.appendChild(this.#svgContainer);
 
         this.#planetElements = new Map();
-        this.#wormholeElements = new Map();
+        this.#planetPopupElements = new Map();
+        this.#waveElements = [];
         this.#planets = new Map();
-        this.#wormholes = new Map();
 
         this.#playerDict = {
             0: 0
@@ -196,17 +284,31 @@ class UIController {
      * @param {Array<Planet>} planets 
      */
     #renderPlanets(planets) {
+        const popups = [];
         for (const planet of planets) {
             if (this.#planetElements.has(planet.id)) {
                 this.#updatePlanetElement(planet, this.#planetElements.get(planet.id));
+                this.#updatePlanetPopupElement(planet, this.#planetPopupElements.get(planet.id));
             } else {
                 const planetDiv = this.#createPlanetElement(planet);
 
                 this.#planetElements.set(planet.id, planetDiv);
                 this.#planets.set(planet.id, planet);
-                this.#container.appendChild(planetDiv);
+                this.#svgContainer.appendChild(planetDiv);
+
+                const planetPopup = this.#createPlanetPopup(planet);
+                this.#planetPopupElements.set(planet.id, planetPopup);
+
+                SVGFactory.applyProperties(planetDiv, {
+                    onmouseenter: `show('planet-popup-${planet.id}')`,
+                    onmouseleave: `hide('planet-popup-${planet.id}')`,
+                });
+
+                popups.push(planetPopup);
             }
         }
+
+        popups.forEach(planetPopup => this.#svgContainer.appendChild(planetPopup));
     }
 
     /**
@@ -214,7 +316,12 @@ class UIController {
      * @returns {HTMLDivElement}
      */
     #createPlanetElement(planet) {
-        const planetDiv = document.createElement('div');
+        const planetDiv = SVGFactory.createElement('circle');
+        planetDiv.id = 'planet' + planet.id
+
+        SVGFactory.applyProperties(planetDiv, {
+            r: UISVGController.#PlanetSize
+        });
         
         this.#updatePlanetElement(planet, planetDiv);
 
@@ -227,31 +334,110 @@ class UIController {
      * @returns {void}
      */
     #updatePlanetElement(planet, planetDiv) {
-        const displayedName = planet.name ?? planet.id;
-        const displayedInfo = `pos=(${planet.x}, ${planet.y})`;
-        const backgroundColor = UIController.#Colors[this.#playerDict[planet.player]] ?? 'red';
-        const renderedPosition = this.#calculateRenderedPosition(planet.x, planet.y, UIController.#PlanetSize);
+        const backgroundColor = UISVGController.#Colors[this.#playerDict[planet.player]] ?? 'red';
+        const renderedPosition = this.#calculateRenderedPosition(planet.x, planet.y);
 
-        planetDiv.className = 'planet';
-        planetDiv.id = 'planet' + planet.id
-        planetDiv.style.width = UIController.#PlanetSize + 'px';
-        planetDiv.style.height = UIController.#PlanetSize + 'px';
-        planetDiv.style.backgroundColor = backgroundColor;
-        if(planet.destroyed === true) {
-            planetDiv.style.backgroundColor = 'black';
+        planetDiv.style.fill = backgroundColor;
+
+        if (planet.destroyed === true) {
+            planetDiv.style.fill = 'black';
         }
-        planetDiv.style.left = renderedPosition.x + 'px';
-        planetDiv.style.top = renderedPosition.y + 'px';
 
-        const planetPopup = document.createElement('div');
-        planetPopup.className = 'planet-popup';
-        planetPopup.innerHTML = `<strong>${displayedName}</strong><br>
-        ${displayedInfo}<br>
-        player: ${planet.player}<br>
-        destroyed: ${planet.destroyed}}`;
+        SVGFactory.applyProperties(planetDiv, {
+            cx: renderedPosition.x,
+            cy: renderedPosition.y,
+        });
+    }
 
-        planetDiv.innerHTML = '';
-        planetDiv.appendChild(planetPopup);
+    #createPlanetPopup(planet) {
+        const renderedPosition = this.#calculateRenderedPosition(planet.x, planet.y);
+        const displayedName = planet.name ?? planet.id;
+
+        const rectX = renderedPosition.x + UISVGController.#PlanetSize;
+        const rectY = renderedPosition.y - UISVGController.#PlanetSize;
+
+        const infoList = this.#createPlanetInfo(planet);
+        const textLength = infoList.reduce((acc, current) => Math.max(acc, current.length), `${planet.id}`.length);
+
+        const rect = SVGFactory.createElement('rect', {
+            x: rectX,
+            y: rectY,
+            width: textLength*8 + UISVGController.#PopupPadding*2 + 2,
+            height: (infoList.length+1) * UISVGController.#PopupFontSize + 2 + UISVGController.#PopupPadding*2,
+            fill: 'white'
+        });
+
+        const titleText = SVGFactory.createElement('text', {
+            x: rectX + UISVGController.#PopupPadding,
+            y: rectY + UISVGController.#PopupFontSize + UISVGController.#PopupPadding,
+            'font-size': UISVGController.#PopupFontSize,
+            'font-weight': 'bold',
+            'font-family': 'Courier'
+        });
+
+        titleText.textContent = displayedName;
+
+        const group = SVGFactory.createElement('g', {
+            visibility: 'hidden'
+        });
+        group.id = `planet-popup-${planet.id}`
+        group.appendChild(rect);
+        group.appendChild(titleText);
+
+        for (let i = 0; i < infoList.length; i++) {
+            const infoText = SVGFactory.createElement('text', {
+                x: rectX + UISVGController.#PopupPadding,
+                y: rectY + (i+2) * UISVGController.#PopupFontSize + UISVGController.#PopupPadding,
+                'font-size': UISVGController.#PopupFontSize,
+                'font-weight': 'normal',
+                'font-family': 'Courier'
+            });
+
+            infoText.textContent = infoList[i];
+            group.appendChild(infoText);
+        }
+
+        return group;
+    }
+
+    #updatePlanetPopupElement(planet, popupElement) {
+        const renderedPosition = this.#calculateRenderedPosition(planet.x, planet.y);
+
+        const rectX = renderedPosition.x + UISVGController.#PlanetSize;
+        const rectY = renderedPosition.y - UISVGController.#PlanetSize;
+
+        const infoList = this.#createPlanetInfo(planet);
+        const textLength = infoList.reduce((acc, current) => Math.max(acc, current.length), `${planet.id}`.length);
+
+        SVGFactory.applyProperties(popupElement.children[0], {
+            x: rectX,
+            y: rectY,
+            width: textLength*8 + UISVGController.#PopupPadding*2 + 2,
+        });
+
+        SVGFactory.applyProperties(popupElement.children[1], {
+            x: rectX + UISVGController.#PopupPadding,
+            y: rectY + UISVGController.#PopupFontSize + UISVGController.#PopupPadding,
+        });
+
+        for (let i = 0; i < infoList.length; i++) {
+            const infoText = popupElement.children[2 + i];
+
+            SVGFactory.applyProperties(infoText, {
+                x: rectX + UISVGController.#PopupPadding,
+                y: rectY + (i+2) * UISVGController.#PopupFontSize + UISVGController.#PopupPadding,
+            });
+
+            infoText.textContent = infoList[i];
+        }
+    }
+
+    #createPlanetInfo(planet) {
+        return [
+            `pos: (${planet.x}, ${planet.y})`,
+            `player: ${planet.player}`,
+            `destroyed: ${planet.destroyed}`
+        ];
     }
 
     /**
@@ -270,54 +456,45 @@ class UIController {
         return renderedPosition.translate(-offset);
     }
 
-    /**
-     * @param {Array<Wormhole>} wormholes
-     * @returns {HTMLDivElement}
-     */
-    #renderWormholes(wormholes) {
-        for (const wormhole of wormholes) {
-
-            const dx = wormhole.x2 - wormhole.x1;
-            const dy = wormhole.y2 - wormhole.y1;
-            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-            const length = Math.sqrt(dx * dx + dy * dy);
-
-            const wormholeDiv = document.createElement('div');
-            wormholeDiv.className = 'wormhole';
-            wormholeDiv.style.width = length + 'px';
-            wormholeDiv.style.left = wormhole.x1 + 'px';
-            wormholeDiv.style.top = wormhole.y1 - 5 + 'px';
-            wormholeDiv.style.transform = 'rotate(' + angle + 'deg)';
-            wormholeDiv.style.backgroundColor = wormhole.color;
-
-            const wormholePopup = document.createElement('div');
-            wormholePopup.className = 'wormhole-popup';
-            wormholePopup.innerHTML = '<strong>' + wormhole.name + '</strong><br>' + wormhole.info;
-
-            wormholeDiv.appendChild(wormholePopup);
-            document.getElementById('container').appendChild(wormholeDiv);
+    #drawLine(x, y, len, angleRad, color) {
+        if (!angleRad && angleRad !== 0) {
+            return;
         }
-    }
 
-    #drawLine(x, y, len, angleRad) {
-        // Convert angle from degrees to radians
         // Calculate the end point of the line
         const endX = x + len * Math.cos(angleRad);
         const endY = y + len * Math.sin(angleRad);
 
-        // Create a new div element to represent the line
-        const line = document.createElement("div");
+        const line = SVGFactory.createElement('line', {
+            x1: x,
+            y1: y,
+            x2: endX,
+            y2: endY,
+            stroke: color ?? 'black'
+        });
 
-        // Set the position and dimensions of the line
-        line.className = "effect-line"
-        line.style.top = y + "px";
-        line.style.left = x + "px";
-        line.style.width = len + "px";
-
-        // Rotate the line to match the angle
-        line.style.transform = `rotate(${angleRad + Math.PI/2}rad)`;
+        this.#waveElements.push({
+            element: line,
+            timestamp: new Date()
+        });
 
         // Add the line to the DOM
-        this.#container.appendChild(line);
+        this.#svgContainer.appendChild(line);
+    }
+
+    #animate() {
+        if (!this.#allowAnimation) {
+            return;
+        }
+
+        const currentTime = new Date();
+
+        this.#waveElements.forEach(item => {
+            const elapsed = currentTime - item.timestamp;
+
+            if (elapsed > UISVGController.#RemoveWavesAfterMs) {
+                item.element.remove();
+            }
+        });
     }
 }
