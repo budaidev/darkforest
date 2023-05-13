@@ -51,7 +51,6 @@ public class AIContainer {
 
 		runner = new AIRunner();
 		ai = new SampleAI();
-		// ai.init(gameActionApi);
 		runner.init(ai);
 		
 		scheduledTask = scheduler.scheduleAtFixedRate(runner, 0, 1000, TimeUnit.MILLISECONDS);
@@ -186,7 +185,10 @@ public class AIContainer {
 		
 		try {
 			scheduler.shutdown();
-			scheduler.awaitTermination(2, TimeUnit.SECONDS);
+
+			if (!scheduler.awaitTermination(2, TimeUnit.SECONDS)) {
+				scheduler.shutdownNow();
+			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}

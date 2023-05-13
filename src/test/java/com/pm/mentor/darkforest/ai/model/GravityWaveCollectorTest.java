@@ -31,6 +31,7 @@ public class GravityWaveCollectorTest {
         GameSettings gameSettings = new GameSettings();
         gameSettings.setPassivityFleshPrecision(5);
         gameSettings.setGravityWaveSourceLocationPrecision(5);
+
         return gameSettings;
     }
 
@@ -38,6 +39,7 @@ public class GravityWaveCollectorTest {
         List<Player> players = new ArrayList<>();
         players.add(Player.builder().id(1).teamName("test1").build());
         players.add(Player.builder().id(2).teamName("test2").build());
+
         return players;
     }
 
@@ -52,7 +54,7 @@ public class GravityWaveCollectorTest {
                 .build();
     }
 
-    private PlanetAndEffect createReceiverPlanets(Point source, double dir, double dist, int planetId, int lightspeed){
+    private PlanetAndEffect createReceiverPlanets(Point source, double dir, double dist, int planetId, int lightspeed) {
 
         Point p = source.move(dir, dist);
         Planet planet = createPlanet(planetId, p);
@@ -61,7 +63,7 @@ public class GravityWaveCollectorTest {
         return new PlanetAndEffect(planet, effect);
     }
 
-    private PlanetAndEffect createReceiverPlanets(Point source, Point target, int planetId, int lightspeed){
+    private PlanetAndEffect createReceiverPlanets(Point source, Point target, int planetId, int lightspeed) {
         Vector v = target.minus(source);
         double dir = v.angleToNorth().rad;
         double dist = v.magnitude;
