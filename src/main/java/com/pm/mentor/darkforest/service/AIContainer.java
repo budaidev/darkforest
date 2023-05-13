@@ -1,5 +1,7 @@
 package com.pm.mentor.darkforest.service;
 
+import java.io.StringWriter;
+import java.io.PrintWriter;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -57,18 +59,28 @@ public class AIContainer {
 	}
 	
 	public void receiveGameEvent(GameEvent event) {
-		val timeStarted = System.currentTimeMillis();
-		
-		handleGameEvent(event);
-		runner.receiveEvent(event);
-		scheduler.execute(runner);
-		
-		val elapsed = System.currentTimeMillis() - timeStarted;
-		
-		if (elapsed > 20) {
-			log.warn(String.format("AIContainer.receiveGameEvent execution took: %d ms", elapsed));
-		} else {
-			log.trace(String.format("AIContainer.receiveGameEvent execution took: %d ms", elapsed));
+		try {
+			val timeStarted = System.currentTimeMillis();
+			
+			handleGameEvent(event);
+			runner.receiveEvent(event);
+			scheduler.execute(runner);
+			
+			val elapsed = System.currentTimeMillis() - timeStarted;
+			
+			if (elapsed > 20) {
+				log.warn(String.format("AIContainer.receiveGameEvent execution took: %d ms", elapsed));
+			} else {
+				log.trace(String.format("AIContainer.receiveGameEvent execution took: %d ms", elapsed));
+			}
+		} catch (Exception e) {
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			
+			e.printStackTrace(pw);
+			String sStackTrace = sw.toString();
+			
+			log.error(sStackTrace);
 		}
 	}
 
@@ -162,6 +174,8 @@ public class AIContainer {
 				break;
 
 			case GAME_ENDED:
+				ai.stop();
+
 				break;
 		}
 		

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.function.Function;
 
 import com.loxon.javachallenge.challenge.game.event.actioneffect.GravityWaveCrossing;
@@ -54,10 +55,16 @@ public class GravityWaveCollector {
     }
 
     private Planet findPlanet(int id) {
-        return planets.stream()
-                .filter(p -> p.getId() == id)
-                .findAny()
-                .get();
+    	try {
+	        return planets.stream()
+	                .filter(p -> p.getId() == id)
+	                .findAny()
+	                .get();
+    	} catch (NoSuchElementException e) {
+    		log.error(String.format("Unable to find planet: %d", id));
+    		
+    		throw e;
+    	}
     }
 
     public List<Planet> filterPossiblePlanets(List<Planet> planets,

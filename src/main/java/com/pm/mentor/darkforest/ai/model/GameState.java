@@ -256,4 +256,9 @@ public class GameState {
 			.filter(action -> action.getActionEndTime() <= timestamp)
 			.collect(Collectors.toList());
 	}
+
+	public void clearActions() {
+		initiatedActions.clear();
+		activeActions.clear();
+	}
 }

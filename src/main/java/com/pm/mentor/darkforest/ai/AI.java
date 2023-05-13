@@ -12,4 +12,6 @@ public interface AI {
 	void heartBeat();
 	
 	boolean isRunning();
+
+	void stop();
 }

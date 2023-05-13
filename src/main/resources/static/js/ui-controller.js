@@ -457,13 +457,17 @@ class UISVGController {
     }
 
     #drawLine(x, y, len, angleRad, color) {
+        // angleRad contains the direction of the gravity wave so by defaut it points away from it's source
+        // however for us it is better if the line drawn for it points towards the source, so we reverse the angle to point in the opposite direction
+        angleRad = angleRad + Math.PI;
+
         if (!angleRad && angleRad !== 0) {
             return;
         }
 
         // Calculate the end point of the line
-        const endX = x + len * Math.cos(angleRad);
-        const endY = y + len * Math.sin(angleRad);
+        const endX = x + len * Math.sin(angleRad);
+        const endY = y + len * -Math.cos(angleRad);
 
         const line = SVGFactory.createElement('line', {
             x1: x,

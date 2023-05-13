@@ -1,5 +1,11 @@
 package com.pm.mentor.darkforest.ai.manual;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loxon.javachallenge.challenge.game.event.GameEvent;
@@ -10,7 +16,6 @@ import com.loxon.javachallenge.challenge.game.event.action.ErectShieldAction;
 import com.loxon.javachallenge.challenge.game.event.action.GameAction;
 import com.loxon.javachallenge.challenge.game.event.action.ShootMBHAction;
 import com.loxon.javachallenge.challenge.game.event.action.SpaceMissionAction;
-import com.loxon.javachallenge.challenge.game.model.Game;
 import com.pm.mentor.darkforest.ai.AI;
 import com.pm.mentor.darkforest.ai.GameActionApi;
 import com.pm.mentor.darkforest.ai.manual.actionevents.BuildWormholeEvent;
@@ -18,16 +23,10 @@ import com.pm.mentor.darkforest.ai.manual.actionevents.ErectShieldEvent;
 import com.pm.mentor.darkforest.ai.manual.actionevents.ShootMBHEvent;
 import com.pm.mentor.darkforest.ai.manual.actionevents.SpaceMissionEvent;
 import com.pm.mentor.darkforest.ai.model.GameState;
-import com.pm.mentor.darkforest.ui.GameStateChangeEvent;
-import java.util.HashMap;
-import java.util.Map;
+
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -110,6 +109,9 @@ public class ManualAI implements AI {
 		// TODO Auto-generated method stub
 
 	}
+	
+	@Override
+	public void stop() {}
 
 	private void spaceMission(int sourcePlanet, int targetPlanet) {
 		val action = actionApi.spaceMission(sourcePlanet, targetPlanet);

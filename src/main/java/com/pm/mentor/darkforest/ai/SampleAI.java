@@ -35,15 +35,27 @@ public class SampleAI implements AI {
 
 	@Override
 	public void heartBeat() {
-		log.trace("AI received a heartbeat");
 		if (!running) {
 			return;
 		}
 		
+		log.trace("AI received a heartbeat");
+		
 		doStuff();
 	}
 	
+	@Override
+	public void stop() {
+		running = false;
+	}
+	
 	private void doStuff() {
+		if (!running) {
+			gameState.clearActions();
+			
+			return;
+		}
+
 		log.trace("dostuff");
 
 		if (!gameState.hasFreeAction()) {
