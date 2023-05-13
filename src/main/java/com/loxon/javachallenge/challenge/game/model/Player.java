@@ -1,11 +1,17 @@
 package com.loxon.javachallenge.challenge.game.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Tárolja a játékoshoz (csapat) tartozó statisztikákat, metaadatokat.
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Player {
 
     /**

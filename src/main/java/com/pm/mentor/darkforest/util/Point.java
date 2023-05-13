@@ -2,6 +2,7 @@ package com.pm.mentor.darkforest.util;
 
 import lombok.Data;
 import lombok.ToString;
+import lombok.val;
 
 @Data
 @ToString
@@ -26,8 +27,14 @@ public class Point {
     public void setY(int y) { this.y = y; }
 
     public Point move(double degreeRad, double distance) {
-        int x = (int) (this.getX() + distance * Math.cos(degreeRad));
-        int y = (int) (this.getY() + distance * Math.sin(degreeRad));
+        double adjustedDegreeRad = degreeRad - Math.PI / 2; // Adjusting 90 degrees clockwise
+
+        while (adjustedDegreeRad < 0) {
+            adjustedDegreeRad += 2 * Math.PI;
+        }
+
+        int x = (int) (this.getX() + distance * Math.cos(adjustedDegreeRad));
+        int y = (int) (this.getY() + distance * Math.sin(adjustedDegreeRad));
         return new Point(x, y);
     }
     

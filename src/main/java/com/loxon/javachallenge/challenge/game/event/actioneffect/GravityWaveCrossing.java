@@ -3,9 +3,13 @@ package com.loxon.javachallenge.challenge.game.event.actioneffect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.loxon.javachallenge.challenge.game.model.GravityWaveCause;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 /**
  * Egy GravityWave adatait leíró osztály.
@@ -13,6 +17,9 @@ import lombok.ToString;
 @Data
 @ToString(callSuper=true)
 @EqualsAndHashCode(callSuper = true)
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 public class GravityWaveCrossing extends ActionEffect {
 
 	/**
