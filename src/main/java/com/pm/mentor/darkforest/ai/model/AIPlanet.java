@@ -10,9 +10,6 @@ import lombok.ToString;
 public class AIPlanet {
 	
 	@Getter
-	private final Planet originalPlanet;
-	
-	@Getter
 	private final int id;
 	@Getter
 	private final Point pos;
@@ -25,7 +22,6 @@ public class AIPlanet {
 	private boolean visitedBySpaceMission = false;
 	
 	public AIPlanet(Planet p) {
-		originalPlanet = p;
 		id = p.getId();
 		pos = new Point(p.getX(), p.getY());
 		owner = p.getPlayer();
