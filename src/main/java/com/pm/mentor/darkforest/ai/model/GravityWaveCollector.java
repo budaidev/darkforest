@@ -12,7 +12,6 @@ import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffect;
 import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffectType;
 import com.loxon.javachallenge.challenge.game.event.actioneffect.GravityWaveCrossing;
 import com.loxon.javachallenge.challenge.game.model.GravityWaveCause;
-import com.loxon.javachallenge.challenge.game.model.Planet;
 import com.loxon.javachallenge.challenge.game.model.Player;
 import com.loxon.javachallenge.challenge.game.settings.GameSettings;
 import com.pm.mentor.darkforest.util.Angle;
@@ -28,11 +27,11 @@ public class GravityWaveCollector {
     private final double maxEventLifetime;
     private final double lightSpeed;
     private final Map<Integer, PlayerActionEffectCollector> playerEffectCollectors = new HashMap<>();
-    private final List<Planet> planets;
+    private final List<AIPlanet> planets;
     private final int playerId;
     private final GameSettings settings;
 
-    public GravityWaveCollector(List<Player> availablePlayers, List<Planet> planets, int playerId, GameSettings settings) {
+    public GravityWaveCollector(List<Player> availablePlayers, List<AIPlanet> planets, int playerId, GameSettings settings) {
     	val mapHeight = settings.getHeight();
     	val mapWidth = settings.getWidth();
 
@@ -54,11 +53,11 @@ public class GravityWaveCollector {
                 .collect(effect);
     }
 
-    private double distanceBetween(Planet a, Planet b) {
-        return a.distance(b);
+    private double distanceBetween(AIPlanet a, AIPlanet b) {
+        return a.getPos().distance(b.getPos());
     }
 
-    private Planet findPlanet(int id) {
+    private AIPlanet findPlanet(int id) {
     	try {
 	        return planets.stream()
 	                .filter(p -> p.getId() == id)
@@ -71,12 +70,12 @@ public class GravityWaveCollector {
     	}
     }
 
-    public List<Planet> filterPossiblePlanets(List<Planet> planets,
+    public List<AIPlanet> filterPossiblePlanets(List<AIPlanet> planets,
                                               GravityWaveCrossing pastEffect,
                                               GravityWaveCrossing currentEffect,
                                               int precision) {
-        Planet planetA = findPlanet(pastEffect.getAffectedMapObjectId());
-        Planet planetB = findPlanet(currentEffect.getAffectedMapObjectId());
+        AIPlanet planetA = findPlanet(pastEffect.getAffectedMapObjectId());
+        AIPlanet planetB = findPlanet(currentEffect.getAffectedMapObjectId());
 
         double error = precision / 100.0 * 2 * Math.PI;
 
@@ -88,21 +87,21 @@ public class GravityWaveCollector {
         double current_dir_up = currentEffect.getDirection() + error;
         double current_dir_down = currentEffect.getDirection() - error;
 
-        Point pA = new Point(planetA.getX(), planetA.getY());
-        Point pB = new Point(planetB.getX(), planetB.getY());
+        Point pA = planetA.getPos();
+        Point pB = planetB.getPos();
 
         return planets.stream().filter(
                         x -> MathUtil.isInsideTheTriangle(
                                 pA,
                                 pA.move(past_dir_up, settings.getWidth()),
                                 pA.move(past_dir_down, settings.getWidth()),
-                                new Point(x.getX(), x.getY())))
+                                x.getPos()))
                 .filter(
                         x -> MathUtil.isInsideTheTriangle(
                                 pB,
                                 pB.move(current_dir_up, settings.getWidth()),
                                 pB.move(current_dir_down, settings.getWidth()),
-                                new Point(x.getX(), x.getY())))
+                                x.getPos()))
                 .collect(Collectors.toList());
     }
 
@@ -168,9 +167,9 @@ public class GravityWaveCollector {
                     if (isCloseEnough(expectedObservationTimeDifference, timeBetweenEffects)) {
                         log.trace(String.format("considering potential source planet: %s", potentialSource.toString()));
 
-                        val sourcePoint = new Point(potentialSource.getX(), potentialSource.getY());
-                        val pointA = new Point(planetA.getX(), planetA.getY());
-                        val pointB = new Point(planetB.getX(), planetB.getY());
+                        val sourcePoint = potentialSource.getPos();
+                        val pointA = planetA.getPos();
+                        val pointB = planetB.getPos();
 
                         val expectedAngleA = pointA.minus(sourcePoint).angleToNorth().deg;
                         val actualAngleA = new Angle(pastEffect.getDirection()).deg;
@@ -224,12 +223,12 @@ public class GravityWaveCollector {
         return new CollectResult(false, null);
     }
 
+    private boolean shallSkipPlanet(AIPlanet planet) {
+        if (planet.isDestroyed()) {
+        	return true;
+        }
 
-    private boolean shallSkipPlanet(Planet planet) {
-        // TODO
-        // skip planet if it is known to be destroyed
-
-        if (planet.getPlayer() == playerId) {
+        if (planet.getOwner() == playerId) {
             return true;
         }
 

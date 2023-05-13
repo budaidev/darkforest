@@ -35,11 +35,11 @@ public class GravityWaveCollectorTest {
     @Test
     public void sameDirectionTest() {
 
-        List<Planet> planets = new ArrayList<>();
+        List<AIPlanet> planets = new ArrayList<>();
 
         Point source = new Point(30, 30);
 
-        Planet planet = createPlanet(10000, source);
+        AIPlanet planet = createPlanet(10000, source);
         planets.add(planet);
 
         PlanetAndEffect pae1 = createReceiverPlanets(source, Math.PI/2, 40, 10001);
@@ -61,18 +61,18 @@ public class GravityWaveCollectorTest {
         CollectResult res2 = gravityWaveCollector.collect(pae2.effect);
         assertFalse(res1.isSuccessful());
         assertTrue(res2.isSuccessful());
-        assertEquals(30, res2.getPossibleSource().getX());
-        assertEquals(30, res2.getPossibleSource().getY());
+        assertEquals(30, res2.getPossibleSource().getPos().getX());
+        assertEquals(30, res2.getPossibleSource().getPos().getY());
     }
 
     @Test
     public void _90_degrees_test() {
 
-        List<Planet> planets = new ArrayList<>();
+        List<AIPlanet> planets = new ArrayList<>();
 
         Point source = new Point(30, 30);
 
-        Planet planet = createPlanet(10000, source);
+        AIPlanet planet = createPlanet(10000, source);
         planets.add(planet);
 
         PlanetAndEffect pae1 = createReceiverPlanets(source, new Point(70,30), 10001);
@@ -89,18 +89,18 @@ public class GravityWaveCollectorTest {
         CollectResult res2 = gravityWaveCollector.collect(pae2.effect);
         assertFalse(res1.isSuccessful());
         assertTrue(res2.isSuccessful());
-        assertEquals(30, res2.getPossibleSource().getX());
-        assertEquals(30, res2.getPossibleSource().getY());
+        assertEquals(30, res2.getPossibleSource().getPos().getX());
+        assertEquals(30, res2.getPossibleSource().getPos().getY());
     }
 
     @Test
     public void _45_degrees_test() {
 
-        List<Planet> planets = new ArrayList<>();
+        List<AIPlanet> planets = new ArrayList<>();
 
         Point source = new Point(30, 30);
 
-        Planet planet = createPlanet(10000, source);
+        AIPlanet planet = createPlanet(10000, source);
         planets.add(planet);
 
         PlanetAndEffect pae1 = createReceiverPlanets(source, new Point(40, 40), 10001);
@@ -117,8 +117,8 @@ public class GravityWaveCollectorTest {
         CollectResult res2 = gravityWaveCollector.collect(pae2.effect);
         assertFalse(res1.isSuccessful());
         assertTrue(res2.isSuccessful());
-        assertEquals(30, res2.getPossibleSource().getX());
-        assertEquals(30, res2.getPossibleSource().getY());
+        assertEquals(30, res2.getPossibleSource().getPos().getX());
+        assertEquals(30, res2.getPossibleSource().getPos().getY());
     }
     
     @Test
@@ -134,7 +134,7 @@ public class GravityWaveCollectorTest {
     	val observer1 = createPlanet(2302, new Point(18, 26));
     	val observer2 = createPlanet(2306, new Point(20, 33));
     	
-    	List<Planet> planets = new ArrayList<>();
+    	List<AIPlanet> planets = new ArrayList<>();
     	planets.add(sourcePlanet);
     	planets.add(observer1);
     	planets.add(observer2);
@@ -149,11 +149,11 @@ public class GravityWaveCollectorTest {
     	assertEquals(2273, res2.getPossibleSource().getId());
     }
     
-    private Planet createPlanet(int id, int x, int y) {
-        return Planet.builder().id(id).x(x).y(y).build();
+    private AIPlanet createPlanet(int id, int x, int y) {
+    	return new AIPlanet(Planet.builder().id(id).x(x).y(y).build());
     }
 
-    private Planet createPlanet(int id, Point point) {
+    private AIPlanet createPlanet(int id, Point point) {
         return createPlanet(id, point.getX(), point.getY());
     }
 
@@ -192,7 +192,7 @@ public class GravityWaveCollectorTest {
 
     	val lightSpeed = settings.getTimeOfOneLightYear();
         Point p = source.move(dir, dist);
-        Planet planet = createPlanet(planetId, p);
+        AIPlanet planet = createPlanet(planetId, p);
         GravityWaveCrossing effect = createSpaceMissionPassingEffect((int)(dist*lightSpeed*2), dir, planetId);
 
         return new PlanetAndEffect(planet, effect);
@@ -203,17 +203,17 @@ public class GravityWaveCollectorTest {
         Vector v = target.minus(source);
         double dir = v.angleToNorth().rad;
         double dist = v.magnitude;
-        Planet planet = createPlanet(planetId, target);
+        AIPlanet planet = createPlanet(planetId, target);
         GravityWaveCrossing effect = createSpaceMissionPassingEffect((int)(dist*lightSpeed*2), dir, planetId);
 
         return new PlanetAndEffect(planet, effect);
     }
 
     static class PlanetAndEffect {
-        Planet planet;
+        AIPlanet planet;
         GravityWaveCrossing effect;
 
-        public PlanetAndEffect(Planet planet, GravityWaveCrossing effect) {
+        public PlanetAndEffect(AIPlanet planet, GravityWaveCrossing effect) {
             this.planet = planet;
             this.effect = effect;
         }

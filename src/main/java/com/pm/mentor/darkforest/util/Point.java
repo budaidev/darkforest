@@ -2,7 +2,6 @@ package com.pm.mentor.darkforest.util;
 
 import lombok.Data;
 import lombok.ToString;
-import lombok.val;
 
 @Data
 @ToString

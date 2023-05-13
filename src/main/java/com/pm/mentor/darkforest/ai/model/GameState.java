@@ -31,7 +31,7 @@ public class GameState {
 
 	private final int playerId;
 	private final GameSettings settings;
-	private final List<Planet> planets;
+	private final List<AIPlanet> planets;
 	private final List<Planet> destroyedPlayerPlanets = new ArrayList<>();
 	
 	private final GameActionApi actionApi;
@@ -43,7 +43,10 @@ public class GameState {
 	public GameState(Game game, int playerId, GameActionApi gameActionApi) {
 		this.playerId = playerId;
 		settings = game.getSettings();
-		planets = game.getWorld().getPlanets();
+		planets = game.getWorld().getPlanets()
+				.stream()
+				.map(p -> new AIPlanet(p))
+				.collect(Collectors.toList());
 		actionApi = gameActionApi;
 		
 		actionEffectCollector = new GravityWaveCollector(game.getPlayers(), planets, playerId, settings);
@@ -54,23 +57,23 @@ public class GameState {
 	}
 	
 	@Synchronized
-	public List<Planet> getPlayerPlanets() {
+	public List<AIPlanet> getPlayerPlanets() {
 		return planets.stream()
-			.filter(p -> p.getPlayer() == playerId)
+			.filter(p -> p.getOwner() == playerId)
 			.collect(Collectors.toList());
 	}
 	
 	@Synchronized
-	public List<Planet> getUnknownPlanets() {
+	public List<AIPlanet> getUnknownPlanets() {
 		return planets.stream()
-			.filter(p -> p.getPlayer() == 0 && p.isDestroyed() == false)
+			.filter(p -> p.isSpaceMissionPossible())
 			.collect(Collectors.toList());
 	}
 	
 	@Synchronized
-	public List<Planet> getUnknownPlanets(Comparator<? super Planet> comparator) {
+	public List<AIPlanet> getUnknownPlanets(Comparator<? super AIPlanet> comparator) {
 		return planets.stream()
-			.filter(p -> p.getPlayer() == 0 && p.isDestroyed() == false)
+			.filter(p -> p.isSpaceMissionPossible())
 			.sorted(comparator)
 			.collect(Collectors.toList());
 	}
@@ -78,44 +81,33 @@ public class GameState {
 	@Synchronized
 	public void spaceMissionSuccessful(int affectedMapObjectId) {
 		tryFindPlayerPlanet(affectedMapObjectId)
-			.ifPresent(p -> {
-				p.setClassM(true);
-				p.setPlayer(playerId);
-				p.setDestroyed(false);
-			});
+			.ifPresent(p -> p.playerSettled(playerId));
 	}
 
 	@Synchronized
 	public void spaceMissionFailed(int affectedMapObjectId) {
 		tryFindPlayerPlanet(affectedMapObjectId)
-			.ifPresent(p -> {
-				// mark the planet as destroyed and inhabitable, however it can still be owned by an other player!
-				p.setClassM(false);
-				p.setDestroyed(true);
-			});
+			.ifPresent(p -> p.spaceMissionFailed());
 	}
 
 	@Synchronized
 	public void planetDestroyed(int affectedId) {
 		tryFindPlayerPlanet(affectedId)
 			.ifPresent(p -> {
-				log.trace(String.format("Player planet %d destroyed.", affectedId));
-				p.setClassM(false);
-				p.setDestroyed(true);
-				planets.remove(p);
-				destroyedPlayerPlanets.add(p);
+				log.trace(String.format("Planet %d destroyed.", affectedId));
+				p.destoryed();
 			});
 	}
 	
 	@Synchronized
-	public Optional<Planet> tryFindPlayerPlanet(int planetId) {
+	public Optional<AIPlanet> tryFindPlayerPlanet(int planetId) {
 		return planets.stream()
 			.filter(p -> p.getId() == planetId)
 			.findFirst();
 	}
 	
 	@Synchronized
-	public void spaceMission(Planet sourcePlanet, Planet targetPlanet) {
+	public void spaceMission(AIPlanet sourcePlanet, AIPlanet targetPlanet) {
 		spaceMission(sourcePlanet.getId(), targetPlanet.getId());
 	}
 	

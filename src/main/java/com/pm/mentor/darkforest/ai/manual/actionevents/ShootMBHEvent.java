@@ -5,7 +5,8 @@ import org.springframework.context.ApplicationEvent;
 
 public class ShootMBHEvent extends ApplicationEvent {
 
-    private final ShootMBHAction event;
+    private static final long serialVersionUID = 1L;
+	private final ShootMBHAction event;
 
     public ShootMBHEvent(Object source, ShootMBHAction event) {
         super(source);

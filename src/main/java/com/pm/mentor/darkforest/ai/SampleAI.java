@@ -3,7 +3,7 @@ package com.pm.mentor.darkforest.ai;
 import java.util.stream.Collectors;
 
 import com.loxon.javachallenge.challenge.game.event.GameEvent;
-import com.loxon.javachallenge.challenge.game.model.Planet;
+import com.pm.mentor.darkforest.ai.model.AIPlanet;
 import com.pm.mentor.darkforest.ai.model.GameState;
 
 import lombok.Getter;
@@ -73,14 +73,14 @@ public class SampleAI implements AI {
 		
 		val playerPlanets = gameState.getPlayerPlanets();
 		log.trace(String.format("number of player planets: %d", playerPlanets.size()));
-		val closestUnknownPlanets = gameState.getUnknownPlanets((Planet lhs, Planet rhs) -> {
+		val closestUnknownPlanets = gameState.getUnknownPlanets((AIPlanet lhs, AIPlanet rhs) -> {
 			// calculate distance to closest player planet
 			val leftDistance = playerPlanets.stream()
-				.mapToInt(p -> (int)p.distance(lhs))
+				.mapToInt(p -> (int)p.getPos().distance(lhs.getPos()))
 				.min();
 			
 			val rightDistance = playerPlanets.stream()
-				.mapToInt(p -> (int)p.distance(rhs))
+				.mapToInt(p -> (int)p.getPos().distance(rhs.getPos()))
 				.min();
 			
 			if (leftDistance.isPresent() && rightDistance.isPresent()) {
@@ -112,9 +112,9 @@ public class SampleAI implements AI {
 			
 			for (val target : targetPlanets) {
 				val closestPlayerPlanet = playerPlanets.stream()
-					.sorted((Planet lhs, Planet rhs) -> {
-						val leftDistance = (int)target.distance(lhs);
-						val rightDistance = (int)target.distance(rhs);
+					.sorted((AIPlanet lhs, AIPlanet rhs) -> {
+						val leftDistance = (int)target.getPos().distance(lhs.getPos());
+						val rightDistance = (int)target.getPos().distance(rhs.getPos());
 						
 						return leftDistance - rightDistance;
 					})
