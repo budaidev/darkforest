@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.loxon.javachallenge.challenge.game.event.GameEvent;
@@ -74,7 +75,7 @@ public class GameState {
 	}
 	
 	@Synchronized
-	public List<AIPlanet> getUnknownPlanets(Comparator<? super AIPlanet> comparator) {
+	public List<AIPlanet> getColonizablePlanets(Comparator<? super AIPlanet> comparator) {
 		return planets.stream()
 			.filter(p -> p.isSpaceMissionPossible())
 			.sorted(comparator)
@@ -152,6 +153,11 @@ public class GameState {
 		val action = actionApi.shootMBH(sourcePlanet, targetPlanet);
 		
 		initiatedActions.put(action.getRefId(), action);
+	}
+	
+	@Synchronized
+	public void shootMBH(AIPlanet playerPlanet, AIPlanet target) {
+		shootMBH(playerPlanet.getId(), target.getId());
 	}
 	
 	@Synchronized
@@ -249,16 +255,32 @@ public class GameState {
 			log.warn(String.format("Removing forgotten action response from active actions list: %s", actionResponse.toString()));
 		}
 	}
+
+	@Synchronized
+	public void clearActions() {
+		initiatedActions.clear();
+		activeActions.clear();
+	}
+
+	@Synchronized
+	public List<AIPlanet> getDestroyablePlanets() {
+		return planets.stream()
+				.filter(p -> p.getOwner() != playerId && !p.isDestroyed())
+				.collect(Collectors.toList());
+	}
+	
+	public Comparator<AIPlanet> createClosestToPlayerPlanetComparator() {
+		return new ClosestToPlayerPlanetsComparator(getPlayerPlanets());
+	}
+	
+	public Predicate<AIPlanet> createTargetedPlanetFilter() {
+		return new TargetedPlanetFilter(this);
+	}
 	
 	private List<ActionResponse> getActionsCompletedBefore(long timestamp) {
 		return activeActions.values()
 			.stream()
 			.filter(action -> action.getActionEndTime() <= timestamp)
 			.collect(Collectors.toList());
-	}
-
-	public void clearActions() {
-		initiatedActions.clear();
-		activeActions.clear();
 	}
 }
