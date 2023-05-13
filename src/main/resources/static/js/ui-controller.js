@@ -19,22 +19,20 @@ class GameEvent {
 class Planet {
 
     /**
-     * @param {string} name 
      * @param {number} id
-     * @param {number} x 
-     * @param {number} y 
-     * @param {number} radius 
+     * @param {Position} pos
      * @param {string} color 
-     * @param {string} info 
+     * @param {boolean} destroyed
+     * @param {boolean} spaceMissionPossible
+     * @param {number} owner
      */
-    constructor(name, id, x, y, radius, color, info) {
-        this.name = name;
+    constructor(id, pos, color, destroyed, spaceMissionPossible, owner) {
         this.id = id;
-        this.x = x;
-        this.y = y;
-        this.radius = radius;
+        this.pos = pos;
         this.color = color;
-        this.info = info;
+        this.destroyed = destroyed;
+        this.spaceMissionPossible = spaceMissionPossible;
+        this.owner = owner;
     }
 }
 
@@ -228,7 +226,7 @@ class UISVGController {
 
             if (UISVGController.#ShowPlayerActionEffects || actionEffect.p !== this.#playerId) {
                 const planet = this.#planets.get(actionEffect.id);
-                const planetPosition = this.#calculateRenderedPosition(planet.x, planet.y);
+                const planetPosition = this.#calculateRenderedPosition(planet.pos.x, planet.pos.y);
                 const color = UISVGController.#Colors[this.#playerDict[actionEffect.p]]
 
                 this.#drawLine(planetPosition.x, planetPosition.y, 50, actionEffect.dir, color);
@@ -334,13 +332,17 @@ class UISVGController {
      * @returns {void}
      */
     #updatePlanetElement(planet, planetDiv) {
-        const backgroundColor = UISVGController.#Colors[this.#playerDict[planet.player]] ?? 'red';
-        const renderedPosition = this.#calculateRenderedPosition(planet.x, planet.y);
+        const backgroundColor = UISVGController.#Colors[this.#playerDict[planet.owner]] ?? 'red';
+        const renderedPosition = this.#calculateRenderedPosition(planet.pos.x, planet.pos.y);
 
         planetDiv.style.fill = backgroundColor;
 
         if (planet.destroyed === true) {
             planetDiv.style.fill = 'black';
+        }
+
+        if (planet.owner !== this.#playerId && planet.spaceMissionPossible === false) {
+            planetDiv.style.fill = 'darkgrey';
         }
 
         SVGFactory.applyProperties(planetDiv, {
@@ -350,8 +352,8 @@ class UISVGController {
     }
 
     #createPlanetPopup(planet) {
-        const renderedPosition = this.#calculateRenderedPosition(planet.x, planet.y);
-        const displayedName = planet.name ?? planet.id;
+        const renderedPosition = this.#calculateRenderedPosition(planet.pos.x, planet.pos.y);
+        const displayedName = planet.id;
 
         const rectX = renderedPosition.x + UISVGController.#PlanetSize;
         const rectY = renderedPosition.y - UISVGController.#PlanetSize;
@@ -401,7 +403,7 @@ class UISVGController {
     }
 
     #updatePlanetPopupElement(planet, popupElement) {
-        const renderedPosition = this.#calculateRenderedPosition(planet.x, planet.y);
+        const renderedPosition = this.#calculateRenderedPosition(planet.pos.x, planet.pos.y);
 
         const rectX = renderedPosition.x + UISVGController.#PlanetSize;
         const rectY = renderedPosition.y - UISVGController.#PlanetSize;
@@ -434,9 +436,10 @@ class UISVGController {
 
     #createPlanetInfo(planet) {
         return [
-            `pos: (${planet.x}, ${planet.y})`,
-            `player: ${planet.player}`,
-            `destroyed: ${planet.destroyed}`
+            `pos: (${planet.pos.x}, ${planet.pos.y})`,
+            `player: ${planet.owner}`,
+            `destroyed: ${planet.destroyed}`,
+            `space mission: ${planet.spaceMissionPossible}`
         ];
     }
 

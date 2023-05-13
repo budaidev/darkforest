@@ -144,10 +144,8 @@ public class AIContainer {
 					
 					originalAction.ifPresent(origAction -> gameState.handlePlayerActionFallout(origAction, actionEffect));
 				} else {
-					// gameState.nonPlayerEffectArrived(actionEffect);
+					gameState.nonPlayerEffectArrived(actionEffect);
 				}
-				
-				gameState.nonPlayerEffectArrived(actionEffect);
 
 				gameStateHolder.updatePlanetStatus(gameState.getPlanets());
 				
@@ -162,6 +160,7 @@ public class AIContainer {
 							case "destroyed":
 								gameState.planetDestroyed(changes.getAffectedId());
 								gameStateHolder.updatePlanetStatus(gameState.getPlanets());
+
 								break;
 						}
 					}

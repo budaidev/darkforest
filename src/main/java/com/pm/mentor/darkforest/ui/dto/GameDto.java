@@ -1,14 +1,16 @@
 package com.pm.mentor.darkforest.ui.dto;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.loxon.javachallenge.challenge.game.event.EventType;
 import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffect;
-import com.loxon.javachallenge.challenge.game.model.Planet;
 import com.loxon.javachallenge.challenge.game.model.Player;
 import com.loxon.javachallenge.challenge.game.model.WormHole;
-import java.util.ArrayList;
-import java.util.List;
-import lombok.Data;
+import com.pm.mentor.darkforest.ai.model.AIPlanet;
+
+import lombok.Data;;
 
 @Data
 public class GameDto {
@@ -29,7 +31,7 @@ public class GameDto {
     /**
      * Tárolja az univerzumban található bolygókat.
      */
-    private List<Planet> planets = new ArrayList<Planet>();
+    private List<AIPlanet> planets = new ArrayList<AIPlanet>();
     /**
      * Tárolja az univerumban található féreglyukakat.
      */
