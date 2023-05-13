@@ -19,13 +19,14 @@ public class AIPlanet {
 	@Getter
 	private boolean destroyed;
 	
-	private boolean visitedBySpaceMission = false;
+	private boolean visitedBySpaceMission;
 	
 	public AIPlanet(Planet p) {
 		id = p.getId();
 		pos = new Point(p.getX(), p.getY());
 		owner = p.getPlayer();
 		destroyed = p.isDestroyed();
+		visitedBySpaceMission = owner != 0;
 	}
 	
 	public boolean isSpaceMissionPossible() {

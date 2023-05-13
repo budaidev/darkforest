@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.loxon.javachallenge.challenge.game.event.EventType;
+import com.loxon.javachallenge.challenge.game.event.action.ActionResponse;
+import com.loxon.javachallenge.challenge.game.event.action.GameAction;
 import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffect;
 import com.loxon.javachallenge.challenge.game.model.Player;
 import com.loxon.javachallenge.challenge.game.model.WormHole;
@@ -22,6 +24,9 @@ public class GameDto {
     private EventType eventType;
 
     private ActionEffect actionEffect;
+    
+    private List<GameAction> initiatedActions = new ArrayList<>();
+    private List<ActionResponse> activeActions = new ArrayList<>();
 
     private long width;
     /**

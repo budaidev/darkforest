@@ -1,7 +1,7 @@
 package com.pm.mentor.darkforest.service;
 
-import java.io.StringWriter;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -180,6 +180,8 @@ public class AIContainer {
 		
 		if (gameState != null) {
 			gameState.purgeStuckActions(event.getEventTime());
+			
+			gameStateHolder.setActions(gameState.getInitiatedActions().values(), gameState.getActiveActions().values());
 		}
 	}
 

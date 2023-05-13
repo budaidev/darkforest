@@ -1,10 +1,13 @@
 package com.pm.mentor.darkforest.ui;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+import com.loxon.javachallenge.challenge.game.event.action.ActionResponse;
+import com.loxon.javachallenge.challenge.game.event.action.GameAction;
 import com.pm.mentor.darkforest.ai.model.AIPlanet;
 import com.pm.mentor.darkforest.ui.dto.GameDto;
 
@@ -23,7 +26,7 @@ public class GameStateHolder {
         return myObject;
     }
 
-    public void  setMyObject(GameDto myObject) {
+    public void setMyObject(GameDto myObject) {
         this.myObject = myObject;
         eventPublisher.publishEvent(new GameStateChangeEvent(this, myObject));
     }
@@ -36,5 +39,12 @@ public class GameStateHolder {
     public void updatePlanetStatus(List<AIPlanet> aiplanets) {
         this.myObject.setPlanets(aiplanets);
         eventPublisher.publishEvent(new GameStateChangeEvent(this, myObject));
+    }
+    
+    public void setActions(Collection<GameAction> initiated, Collection<ActionResponse> active) {
+    	this.myObject.setInitiatedActions(initiated.stream().toList());
+    	this.myObject.setActiveActions(active.stream().toList());
+    	
+    	eventPublisher.publishEvent(new GameStateChangeEvent(this, myObject));
     }
 }
