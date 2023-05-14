@@ -4,6 +4,7 @@ import com.loxon.javachallenge.challenge.game.model.Planet;
 import com.pm.mentor.darkforest.util.Point;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 @ToString
@@ -20,6 +21,13 @@ public class AIPlanet {
 	private boolean destroyed;
 	
 	private boolean visitedBySpaceMission;
+
+	@Getter
+	@Setter
+	private boolean virtualPlanet = false; // used for wormhole comparison
+	@Getter
+	@Setter
+	private double distanceToClosest = 0; // used for wormhole comparison
 	
 	public AIPlanet(Planet p) {
 		id = p.getId();
@@ -28,7 +36,18 @@ public class AIPlanet {
 		destroyed = p.isDestroyed();
 		visitedBySpaceMission = owner != 0;
 	}
-	
+
+	private AIPlanet(Point p) {
+		id = -1;
+		this.pos = p;
+		destroyed = false;
+		virtualPlanet = true;
+	}
+
+	public static AIPlanet createVirtualPlanetFromWormHole(Point p) {
+		return new AIPlanet(p);
+	}
+
 	public boolean isSpaceMissionPossible() {
 		return !destroyed && !visitedBySpaceMission;
 	}
