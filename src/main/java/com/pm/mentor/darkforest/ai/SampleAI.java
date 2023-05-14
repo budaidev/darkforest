@@ -66,10 +66,11 @@ public class SampleAI implements AI {
 		}
 
 		log.trace("dostuff");
+		log.trace(String.format("Actions: Initiated: %d, Active: %d, Calculated: %d, Max: %d",
+				gameState.getInitiatedActions().size(), gameState.getActiveActions().size(), gameState.activeActionCount(), gameState.getMaxConcurrentActionCount()));
 
 		if (!gameState.hasFreeAction()) {
-			log.trace(String.format("No free actions. Initiated: %d, Active: %d, Calculated: %d, Max: %d",
-					gameState.getInitiatedActions().size(), gameState.getActiveActions().size(), gameState.activeActionCount(), gameState.getMaxConcurrentActionCount()));
+			log.trace("No free actions");
 			
 			return;
 		}

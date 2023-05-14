@@ -68,11 +68,11 @@ public class PlanetWebSocketHandler extends TextWebSocketHandler {
 
     @EventListener
     public void handleObjectChangedEvent(GameStateChangeEvent event) throws Exception {
-            // Send the updated MyObject to all connected clients when the object is changed
-            String json = objectMapper.writeValueAsString(event.getMyObject());
-            for (WebSocketSession session : sessions) {
-                session.sendMessage(new TextMessage(json));
-            }
+        // Send the updated MyObject to all connected clients when the object is changed
+        String json = objectMapper.writeValueAsString(event.getMyObject());
+        for (WebSocketSession session : sessions) {
+            session.sendMessage(new TextMessage(json));
+        }
     }
 
     @SneakyThrows

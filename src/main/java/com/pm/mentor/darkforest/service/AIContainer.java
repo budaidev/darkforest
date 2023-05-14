@@ -4,8 +4,8 @@ import com.loxon.javachallenge.challenge.game.event.action.BuildWormHoleAction;
 import com.loxon.javachallenge.challenge.game.event.action.GameActionType;
 import com.loxon.javachallenge.challenge.game.event.actioneffect.WormHoleBuiltEffect;
 import com.loxon.javachallenge.challenge.game.model.WormHole;
-import java.io.StringWriter;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -212,6 +212,8 @@ public class AIContainer {
 		
 		if (gameState != null) {
 			gameState.purgeStuckActions(event.getEventTime());
+			
+			gameStateHolder.setActions(gameState.getInitiatedActions().values(), gameState.getActiveActions().values());
 		}
 	}
 
