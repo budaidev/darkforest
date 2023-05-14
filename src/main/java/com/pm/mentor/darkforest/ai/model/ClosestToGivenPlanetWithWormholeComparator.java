@@ -1,5 +1,7 @@
 package com.pm.mentor.darkforest.ai.model;
 
+import com.pm.mentor.darkforest.util.Point;
+import java.sql.SQLOutput;
 import java.util.Comparator;
 import java.util.List;
 
@@ -16,11 +18,11 @@ public class ClosestToGivenPlanetWithWormholeComparator implements Comparator<AI
 	private final double closerDistance;
 
 
-	public ClosestToGivenPlanetWithWormholeComparator(AIPlanet target, WormHole wormhole) {
+	public  ClosestToGivenPlanetWithWormholeComparator(AIPlanet target, WormHole wormhole) {
 		this.target = target;
 		this.wormhole = wormhole;
 		double d1 = target.getPos().distance(wormhole.getX(), wormhole.getY());
-		double d2 = target.getPos().distance(wormhole.getX(), wormhole.getY());
+		double d2 = target.getPos().distance(wormhole.getXb(), wormhole.getYb());
 
 		if(d1 < d2){
 			closer = new Point(wormhole.getX(), wormhole.getY());

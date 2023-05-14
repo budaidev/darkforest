@@ -1,5 +1,6 @@
 package com.pm.mentor.darkforest.ai.model;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -14,7 +15,7 @@ public class ClosestToPlayerPlanetsWithWormholeComparator implements Comparator<
 	private final List<WormHole> wormholes;
 
 	public ClosestToPlayerPlanetsWithWormholeComparator(List<AIPlanet> playerPlanets, List<WormHole> wormholes) {
-		this.playerPlanets = playerPlanets;
+		this.playerPlanets = new ArrayList<>(playerPlanets);
 		this.wormholes = wormholes;
 		setVirtualPlanets();
 	}
