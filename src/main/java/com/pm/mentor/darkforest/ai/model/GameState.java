@@ -63,7 +63,7 @@ public class GameState {
 	@Synchronized
 	public List<AIPlanet> getPlayerPlanets() {
 		return planets.stream()
-			.filter(p -> p.getOwner() == playerId)
+			.filter(p -> p.getOwner() == playerId && !p.isDestroyed())
 			.collect(Collectors.toList());
 	}
 	
@@ -186,6 +186,8 @@ public class GameState {
 	
 	@Synchronized
 	public void handlePlayerActionFallout(GameAction action, ActionEffect effect) {
+		log.trace(String.format("Received an effect (affectedId=%d) for a previous active action (ref=%d)!", effect.getAffectedMapObjectId(), action.getRefId()));
+
 		// try remove the action from the active action list
 		if (activeActions.containsKey(action.getRefId())) {
 			activeActions.remove(action.getRefId());
@@ -209,11 +211,12 @@ public class GameState {
 		}
 		
 		if (actionNumberChanged) {
-			val pastActionResponses = getActionsCompletedBefore(event.getEventTime());
+			val pastActionResponses = getActionsCompletedBefore(event.getEventTime(), 0);
 			
 			for (val actionResponse : pastActionResponses) {
 				val action = actionResponse.getAction();
 				if (action.getType() == GameActionType.SPACE_MISSION) {
+					log.trace(String.format("Space mission (ref=%d) should have been completed but no info received. Assuming failure.", action.getRefId()));
 					spaceMissionFailed(action.getTargetId());
 					activeActions.remove(action.getRefId());
 				}
@@ -245,7 +248,7 @@ public class GameState {
 
 	@Synchronized
 	public void purgeStuckActions(long eventTime) {
-		val pastActionResponses = getActionsCompletedBefore(eventTime);
+		val pastActionResponses = getActionsCompletedBefore(eventTime, 500);
 		
 		for (val actionResponse : pastActionResponses) {
 			val action = actionResponse.getAction();
@@ -276,11 +279,11 @@ public class GameState {
 	public Predicate<AIPlanet> createTargetedPlanetFilter() {
 		return new TargetedPlanetFilter(this);
 	}
-	
-	private List<ActionResponse> getActionsCompletedBefore(long timestamp) {
+
+	private List<ActionResponse> getActionsCompletedBefore(long timestamp, int safetyThreshold) {
 		return activeActions.values()
 			.stream()
-			.filter(action -> action.getActionEndTime() <= timestamp)
+			.filter(action -> action.getActionEndTime() + safetyThreshold <= timestamp)
 			.collect(Collectors.toList());
 	}
 }

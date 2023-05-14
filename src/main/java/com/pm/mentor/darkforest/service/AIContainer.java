@@ -159,10 +159,10 @@ public class AIContainer {
 
 				if (actionEffect.getEffectChain().contains(ActionEffectType.SPACE_MISSION_SUCCESS)) {
 					gameState.spaceMissionSuccessful(actionEffect.getAffectedMapObjectId());
-				} else if(actionEffect.getEffectChain().contains(ActionEffectType.WORM_HOLE_BUILT)) {
+				} else if (actionEffect.getEffectChain().contains(ActionEffectType.WORM_HOLE_BUILT)) {
 					WormHoleBuiltEffect effect = (WormHoleBuiltEffect) actionEffect;
 					Optional<WormHole> op = wormholeToBuild.stream().filter(x -> x.getId() == effect.getWormHoleId()).findFirst();
-					if(op.isPresent()) {
+					if (op.isPresent()) {
 						WormHole hole = op.get();
 						wormholeHaveBuilt.add(hole);
 						wormholeToBuild.remove(hole);

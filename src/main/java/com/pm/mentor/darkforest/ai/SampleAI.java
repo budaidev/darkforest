@@ -3,6 +3,7 @@ package com.pm.mentor.darkforest.ai;
 import java.util.stream.Collectors;
 
 import com.loxon.javachallenge.challenge.game.event.GameEvent;
+import com.pm.mentor.darkforest.ai.model.AIPlanet;
 import com.pm.mentor.darkforest.ai.model.ClosestToGivenPlanetComparator;
 import com.pm.mentor.darkforest.ai.model.GameState;
 
