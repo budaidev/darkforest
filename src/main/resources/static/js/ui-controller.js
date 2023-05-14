@@ -26,8 +26,9 @@ class Planet {
      * @param {boolean} spaceMissionPossible
      * @param {number} owner
      * @param {boolean} alreadyShot
+     * @param {Object} effectsEmitted
      */
-    constructor(id, pos, color, destroyed, spaceMissionPossible, owner, alreadyShot) {
+    constructor(id, pos, color, destroyed, spaceMissionPossible, owner, alreadyShot, effectsEmitted) {
         this.id = id;
         this.pos = pos;
         this.color = color;
@@ -35,22 +36,27 @@ class Planet {
         this.spaceMissionPossible = spaceMissionPossible;
         this.owner = owner;
         this.alreadyShot = alreadyShot
+        this.effectsEmitted = effectsEmitted;
     }
 }
 
 class Wormhole {
 
     /**
-     * @param {string} name
-     * @param {Position} start
-     * @param {Position} end
+     * @param {string} name 
+     * @param {number} x1 
+     * @param {number} y1 
+     * @param {number} x2 
+     * @param {number} y2 
      * @param {string} color 
      * @param {string} info 
      */
-    constructor(name, start, end, color, info) {
+    constructor(name, x1, y1, x2, y2, color, info) {
         this.name = name;
-        this.start = start;
-        this.end = end;
+        this.x1 = x1;
+        this.y1 = y1;
+        this.x2 = x2;
+        this.y2 = y2;
         this.color = color;
         this.info = info;
     }
@@ -170,6 +176,7 @@ class UISVGController {
     #planetElements;
     #planetPopupElements;
     #waveElements;
+    #effectCounterElements;
     #wormholeElements;
 
     #allowAnimation = true;
@@ -264,6 +271,7 @@ class UISVGController {
         this.#planetPopupElements = new Map();
         this.#waveElements = [];
         this.#planets = new Map();
+        this.#effectCounterElements = new Map();
 
         this.#playerDict = {
             0: 0
@@ -291,6 +299,7 @@ class UISVGController {
             if (this.#planetElements.has(planet.id)) {
                 this.#updatePlanetElement(planet, this.#planetElements.get(planet.id));
                 this.#updatePlanetPopupElement(planet, this.#planetPopupElements.get(planet.id));
+                this.#updatePlanetEffectCounter(planet, this.#effectCounterElements.get(planet.id));
             } else {
                 const planetDiv = this.#createPlanetElement(planet);
 
@@ -300,6 +309,9 @@ class UISVGController {
 
                 const planetPopup = this.#createPlanetPopup(planet);
                 this.#planetPopupElements.set(planet.id, planetPopup);
+
+                const effectCounter = this.#createPlanetEffectCounter(planet);
+                this.#effectCounterElements.set(planet.id, effectCounter);
 
                 SVGFactory.applyProperties(planetDiv, {
                     onmouseenter: `show('planet-popup-${planet.id}')`,
@@ -436,6 +448,31 @@ class UISVGController {
 
             infoText.textContent = infoList[i];
         }
+    }
+
+    #createPlanetEffectCounter(planet) {
+        const effectElement = SVGFactory.createElement('text', {
+            'font-size': 12,
+            'font-weight': 'normal',
+            'font-family': 'Courier'
+        });
+
+        this.#updatePlanetEffectCounter(planet, effectElement);
+
+        this.#svgContainer.appendChild(effectElement);
+
+        return effectElement;
+    }
+
+    #updatePlanetEffectCounter(planet, effectCounterElement) {
+        const renderedPlanetPosition = this.#calculateRenderedPosition(planet.pos.x, planet.pos.y);
+
+        SVGFactory.applyProperties(effectCounterElement, {
+            x: renderedPlanetPosition.x - `${planet.effectsEmitted.length}`.length * 4 + 2,
+            y: renderedPlanetPosition.y - UISVGController.#PlanetSize - 4,
+        });
+
+        effectCounterElement.textContent = planet.effectsEmitted.length;
     }
 
     #createPlanetInfo(planet) {
