@@ -1,9 +1,5 @@
 package com.pm.mentor.darkforest.service;
 
-import com.loxon.javachallenge.challenge.game.event.action.BuildWormHoleAction;
-import com.loxon.javachallenge.challenge.game.event.action.GameActionType;
-import com.loxon.javachallenge.challenge.game.event.actioneffect.WormHoleBuiltEffect;
-import com.loxon.javachallenge.challenge.game.model.WormHole;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -19,7 +15,11 @@ import org.springframework.stereotype.Component;
 import com.loxon.javachallenge.challenge.game.event.ConnectionResultType;
 import com.loxon.javachallenge.challenge.game.event.GameEvent;
 import com.loxon.javachallenge.challenge.game.event.action.ActionResult;
+import com.loxon.javachallenge.challenge.game.event.action.BuildWormHoleAction;
+import com.loxon.javachallenge.challenge.game.event.action.GameActionType;
 import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffectType;
+import com.loxon.javachallenge.challenge.game.event.actioneffect.WormHoleBuiltEffect;
+import com.loxon.javachallenge.challenge.game.model.WormHole;
 import com.pm.mentor.darkforest.ai.AI;
 import com.pm.mentor.darkforest.ai.AIRunner;
 import com.pm.mentor.darkforest.ai.GameActionApi;

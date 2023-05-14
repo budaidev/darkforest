@@ -1,7 +1,5 @@
 package com.pm.mentor.darkforest.ai.model;
 
-import com.loxon.javachallenge.challenge.game.model.WormHole;
-import com.pm.mentor.darkforest.util.Point;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -20,6 +18,7 @@ import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffect;
 import com.loxon.javachallenge.challenge.game.event.actioneffect.GravityWaveCrossing;
 import com.loxon.javachallenge.challenge.game.model.Game;
 import com.loxon.javachallenge.challenge.game.model.Planet;
+import com.loxon.javachallenge.challenge.game.model.WormHole;
 import com.loxon.javachallenge.challenge.game.settings.GameSettings;
 import com.pm.mentor.darkforest.ai.GameActionApi;
 

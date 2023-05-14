@@ -191,9 +191,9 @@
         const selectedType = dropdownList.value;
 
  	    let gameConfig = new GameConfig([8, 8, 8], selectedType);
-         if(selectedType === 'QUALIFYING'){
-             gameConfig = new GameConfig([], selectedType);
-         }
+        if (selectedType === 'QUALIFYING') {
+            gameConfig = new GameConfig([], selectedType);
+        }
         const response = await gameManager.createGame(gameConfig);
  	    
         gameIdSelector.addAndSelectItem({
