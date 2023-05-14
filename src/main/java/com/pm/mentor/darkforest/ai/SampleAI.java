@@ -99,8 +99,8 @@ public class SampleAI implements AI {
 
 			//int x_center = gameState.getSettings().getWidth() / 2;
 			//int y_center = gameState.getSettings().getHeight() / 2;
-			int x_center = startPlanet.getPos().getY();
-			int y_center = startPlanet.getPos().getX();
+			int x_center = gameState.getSettings().getWidth() - startPlanet.getPos().getX();
+			int y_center = gameState.getSettings().getHeight() - startPlanet.getPos().getY();
 
 			gameState.buildWormHole(startPlanet.getPos().getX(), startPlanet.getPos().getY(), x_center, y_center);
 
@@ -179,11 +179,13 @@ public class SampleAI implements AI {
 		} else if(minDistance == distanceFromAPoint) {
 			log.trace(String.format("Sending mission from %d to %d through wh %d with startpoint %s",
 					from.getId(), to.getId(), w.getId(), EntryPointIndex.A));
+			log.trace("Start point: " + from + " to " + to + " wormhole " + w + " " + EntryPointIndex.A);
 			gameState.spaceMissionWithWormHole(from.getId(), to.getId(), w.getId(), EntryPointIndex.A);
 		} else {
 			log.trace(String.format("Sending mission from %d to %d through wh %d with startpoint %s",
 					from.getId(), to.getId(), w.getId(), EntryPointIndex.B));
 			gameState.spaceMissionWithWormHole(from.getId(), to.getId(), w.getId(), EntryPointIndex.B);
+			log.trace("Start point: " + from + " to " + to + " wormhole " + w + " " + EntryPointIndex.B);
 		}
 
 
@@ -198,6 +200,7 @@ public class SampleAI implements AI {
 
 		val nonDestroyedPlanets = gameState.getDestroyablePlanets()
 				.stream()
+				.filter(x -> !x.isAlreadyShot())
 				.sorted(gameState.createClosestToPlayerPlanetComparator())
 				.collect(Collectors.toList());
 
