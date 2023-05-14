@@ -40,7 +40,6 @@ public class GameDto {
     /**
      * Tárolja az univerumban található féreglyukakat.
      */
-    @JsonIgnore
     private List<WormHole> wormHoles = new ArrayList<WormHole>();
 
     /**

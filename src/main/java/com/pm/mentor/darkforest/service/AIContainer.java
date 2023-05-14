@@ -2,8 +2,10 @@ package com.pm.mentor.darkforest.service;
 
 import com.loxon.javachallenge.challenge.game.event.action.BuildWormHoleAction;
 import com.loxon.javachallenge.challenge.game.event.action.GameActionType;
+import com.loxon.javachallenge.challenge.game.event.action.ShootMBHAction;
 import com.loxon.javachallenge.challenge.game.event.actioneffect.WormHoleBuiltEffect;
 import com.loxon.javachallenge.challenge.game.model.WormHole;
+import com.pm.mentor.darkforest.ai.model.AIPlanet;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -122,6 +124,7 @@ public class AIContainer {
 					return;
 				}
 
+
 				if(action.getType() == GameActionType.BUILD_WORM_HOLE) {
 					BuildWormHoleAction wormholeAction = (BuildWormHoleAction) action;
 					WormHole hole = WormHole.builder()
@@ -132,6 +135,10 @@ public class AIContainer {
 							.yb(wormholeAction.getYb())
 							.build();
 					wormholeToBuild.add(hole);
+				} else if(action.getType() == GameActionType.SHOOT_MBH) {
+					ShootMBHAction shootAction = (ShootMBHAction) action;
+					gameState.tryFindPlayerPlanet(shootAction.getTargetId()).ifPresent(AIPlanet::shoot);
+
 				}
 				
 				// remove the action from the initiated actions list

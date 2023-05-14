@@ -23,6 +23,9 @@ public class AIPlanet {
 	private boolean visitedBySpaceMission;
 
 	@Getter
+	private boolean alreadyShot;
+
+	@Getter
 	@Setter
 	private boolean virtualPlanet = false; // used for wormhole comparison
 	@Getter
@@ -35,6 +38,7 @@ public class AIPlanet {
 		owner = p.getPlayer();
 		destroyed = p.isDestroyed();
 		visitedBySpaceMission = owner != 0;
+		alreadyShot = false;
 	}
 
 	private AIPlanet(Point p) {
@@ -63,5 +67,9 @@ public class AIPlanet {
 	
 	public void spaceMissionFailed() {
 		visitedBySpaceMission = true;
+	}
+
+	public void shoot() {
+		alreadyShot = true;
 	}
 }
