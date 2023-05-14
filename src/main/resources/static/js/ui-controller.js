@@ -25,14 +25,16 @@ class Planet {
      * @param {boolean} destroyed
      * @param {boolean} spaceMissionPossible
      * @param {number} owner
+     * @param {boolean} alreadyShot
      */
-    constructor(id, pos, color, destroyed, spaceMissionPossible, owner) {
+    constructor(id, pos, color, destroyed, spaceMissionPossible, owner, alreadyShot) {
         this.id = id;
         this.pos = pos;
         this.color = color;
         this.destroyed = destroyed;
         this.spaceMissionPossible = spaceMissionPossible;
         this.owner = owner;
+        this.alreadyShot = alreadyShot
     }
 }
 
@@ -443,7 +445,8 @@ class UISVGController {
             `pos: (${planet.pos.x}, ${planet.pos.y})`,
             `player: ${planet.owner}`,
             `destroyed: ${planet.destroyed}`,
-            `space mission: ${planet.spaceMissionPossible}`
+            `space mission: ${planet.spaceMissionPossible}`,
+            `shoot: ${planet.alreadyShot}`,
         ];
     }
 
