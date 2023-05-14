@@ -1,5 +1,6 @@
 package com.pm.mentor.darkforest.ai.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffect;
@@ -36,7 +37,7 @@ public class AIPlanet {
 	private double distanceToClosest = 0; // used for wormhole comparison
 	
 	@Getter
-	private List<ActionEffect> effectsEmitted;
+	private final List<ActionEffect> effectsEmitted;
 	
 	public AIPlanet(Planet p) {
 		id = p.getId();
@@ -45,6 +46,7 @@ public class AIPlanet {
 		destroyed = p.isDestroyed();
 		visitedBySpaceMission = owner != 0;
 		alreadyShot = false;
+		effectsEmitted = new ArrayList<>();
 	}
 
 	private AIPlanet(Point p) {
@@ -52,6 +54,7 @@ public class AIPlanet {
 		this.pos = p;
 		destroyed = false;
 		virtualPlanet = true;
+		effectsEmitted = new ArrayList<>();
 	}
 
 	public static AIPlanet createVirtualPlanetFromWormHole(Point p) {
