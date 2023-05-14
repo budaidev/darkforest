@@ -1,5 +1,6 @@
 package com.pm.mentor.darkforest.ai;
 
+import com.pm.mentor.darkforest.ai.model.AIPlanet;
 import java.util.stream.Collectors;
 
 import com.loxon.javachallenge.challenge.game.event.GameEvent;

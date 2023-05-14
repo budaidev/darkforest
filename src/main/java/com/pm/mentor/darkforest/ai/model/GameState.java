@@ -272,6 +272,10 @@ public class GameState {
 	public Comparator<AIPlanet> createClosestToPlayerPlanetComparator() {
 		return new ClosestToPlayerPlanetsComparator(getPlayerPlanets());
 	}
+
+	public Comparator<AIPlanet> createClosestToPlayerPlanetComparatorWithWormholes() {
+		return new ClosestToPlayerPlanetsWithWormholeComparator(getPlayerPlanets(), getWormHoles());
+	}
 	
 	public Predicate<AIPlanet> createTargetedPlanetFilter() {
 		return new TargetedPlanetFilter(this);
