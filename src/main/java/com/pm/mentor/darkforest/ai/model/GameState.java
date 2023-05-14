@@ -1,6 +1,7 @@
 package com.pm.mentor.darkforest.ai.model;
 
 import com.loxon.javachallenge.challenge.game.model.WormHole;
+import com.pm.mentor.darkforest.util.Point;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -72,6 +73,29 @@ public class GameState {
 		return planets.stream()
 			.filter(p -> p.isSpaceMissionPossible())
 			.collect(Collectors.toList());
+	}
+
+	@Synchronized
+	public Optional<WormHole> getCloserWormhole(AIPlanet target){
+		if(wormHoles.isEmpty()){
+			return Optional.empty();
+		}
+		WormHole min = wormHoles.get(0);
+		double distance = target.getPos().distance(wormHoles.get(0).getX(), wormHoles.get(0).getY());
+		for(WormHole wormhole : wormHoles) {
+			double d1 = target.getPos().distance(wormhole.getX(), wormhole.getY());
+			double d2 = target.getPos().distance(wormhole.getXb(), wormhole.getYb());
+			if(d1 < distance){
+				distance = d1;
+				min = wormhole;
+			}
+			if(d2 < distance){
+				distance = d2;
+				min = wormhole;
+			}
+		}
+
+		return Optional.of(min);
 	}
 	
 	@Synchronized
