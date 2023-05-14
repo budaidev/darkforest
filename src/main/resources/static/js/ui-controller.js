@@ -7,11 +7,11 @@ class GameEvent {
      * @param {Array<Wormhole>} wormholes
      * @param {string} eventType
      */
-    constructor(width, height, planets, wormholes, eventType) {
+    constructor(width, height, planets, wormHoles, eventType) {
         this.width = width;
         this.height = height;
         this.planets = planets;
-        this.wormholes = wormholes;
+        this.wormHoles = wormHoles;
         this.eventType = eventType;
     }
 }
@@ -41,20 +41,16 @@ class Planet {
 class Wormhole {
 
     /**
-     * @param {string} name 
-     * @param {number} x1 
-     * @param {number} y1 
-     * @param {number} x2 
-     * @param {number} y2 
+     * @param {string} name
+     * @param {Position} start
+     * @param {Position} end
      * @param {string} color 
      * @param {string} info 
      */
-    constructor(name, x1, y1, x2, y2, color, info) {
+    constructor(name, start, end, color, info) {
         this.name = name;
-        this.x1 = x1;
-        this.y1 = y1;
-        this.x2 = x2;
-        this.y2 = y2;
+        this.start = start;
+        this.end = end;
         this.color = color;
         this.info = info;
     }
@@ -174,6 +170,7 @@ class UISVGController {
     #planetElements;
     #planetPopupElements;
     #waveElements;
+    #wormholeElements;
 
     #allowAnimation = true;
 
@@ -241,8 +238,8 @@ class UISVGController {
             this.#renderPlanets(gameEvent.planets);
         }
 
-        if(gameEvent.wormholes && gameEvent.wormholes.length > 0) {
-            this.#renderWormholes(gameEvent.wormholes);
+        if(gameEvent.wormHoles && gameEvent.wormHoles.length > 0) {
+            this.#renderWormholes(gameEvent.wormHoles);
         }
     }
 
@@ -262,6 +259,7 @@ class UISVGController {
         this.#svgContainer = SVGFactory.createViewBox(this.#containerWidth, this.#containerHeight);
         this.#container.appendChild(this.#svgContainer);
 
+        this.#wormholeElements = new Map();
         this.#planetElements = new Map();
         this.#planetPopupElements = new Map();
         this.#waveElements = [];
@@ -468,17 +466,26 @@ class UISVGController {
 
     #renderWormholes(wormholes) {
         for (const wormhole of wormholes) {
+            if (!this.#wormholeElements.has(wormhole.id)) {
 
-            const line = SVGFactory.createElement('line', {
-                x1: wormhole.x1,
-                y1: wormhole.y1,
-                x2: wormhole.x2,
-                y2: wormhole.y2,
-                stroke: color ?? 'black'
-            });
+                const startPos = this.#calculateRenderedPosition(wormhole.x, wormhole.y);
+                const endPos = this.#calculateRenderedPosition(wormhole.xb, wormhole.yb);
 
-            // Add the line to the DOM
-            this.#svgContainer.appendChild(line);
+                const line = SVGFactory.createElement('line', {
+                    id: wormhole.id,
+                    class: 'wormhole',
+                    x1: startPos.x,
+                    y1: startPos.y,
+                    x2: endPos.x,
+                    y2: endPos.y,
+                    stroke: 'purple'
+                });
+
+                // Add the line to the DOM
+                this.#svgContainer.appendChild(line);
+
+                this.#wormholeElements.set(wormhole.id, line);
+            }
         }
     }
 

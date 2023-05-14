@@ -181,7 +181,7 @@ public class AIContainer {
 						wormholeHaveBuilt.add(hole);
 						wormholeToBuild.remove(hole);
 						gameState.wormHoleBuilt(hole);
-						gameStateHolder.updateWormholes(gameState.getWormHoles());
+
 					}
 				}
 				
@@ -193,6 +193,7 @@ public class AIContainer {
 					gameState.nonPlayerEffectArrived(actionEffect);
 				}
 
+				gameStateHolder.updateWormholes(gameState.getWormHoles());
 				gameStateHolder.updatePlanetStatus(gameState.getPlanets());
 				
 				break;
