@@ -188,6 +188,7 @@ public class GravityWaveCollector {
                         }
 
                         log.trace(String.format("This effect is originated from planet %d", potentialSource.getId()));
+                        potentialSource.blameEffect(currentEffect);
                         return new CollectResult(true, potentialSource);
                     }
                 }
