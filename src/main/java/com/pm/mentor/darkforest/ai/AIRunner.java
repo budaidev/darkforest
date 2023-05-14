@@ -15,6 +15,8 @@ public class AIRunner implements Runnable {
 	
 	private AI aiImplementation;
 	private long lastExecution = 0;
+	
+	private long longestAiExecution = 0;
 
 	@Override
 	public void run() {
@@ -35,6 +37,10 @@ public class AIRunner implements Runnable {
 		if (aiImplementation.isRunning()) {
 			val elapsed = System.currentTimeMillis() - timeStarted;
 			
+			if (elapsed > longestAiExecution) {
+				longestAiExecution = elapsed;
+			}
+			
 			if (elapsed > 20) {
 				log.warn(String.format("AI logic execution took: %d ms", elapsed));
 			} else {
@@ -48,11 +54,16 @@ public class AIRunner implements Runnable {
 	}
 
 	public void startGame(GameState gameState) {
+		longestAiExecution = 0;
 		aiImplementation.init(gameState);
 	}
 
 	public void receiveEvent(GameEvent event) {
 		commandQueue.add(event);
+	}
+	
+	public void signalStop() {
+		log.info(String.format("Longest AI logic execution took %d ms", longestAiExecution));
 	}
 	
 	private boolean shouldSendHeartBeat() {

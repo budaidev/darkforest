@@ -1,9 +1,10 @@
 package com.pm.mentor.darkforest.ai.model;
 
-import com.loxon.javachallenge.challenge.game.model.WormHole;
-import com.pm.mentor.darkforest.util.Point;
 import java.util.Comparator;
 import java.util.List;
+
+import com.loxon.javachallenge.challenge.game.model.WormHole;
+
 import lombok.val;
 
 public class ClosestToGivenPlanetWithWormholeComparator implements Comparator<AIPlanet> {

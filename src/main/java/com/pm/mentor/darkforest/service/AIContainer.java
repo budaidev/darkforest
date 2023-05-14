@@ -49,6 +49,8 @@ public class AIContainer {
 
 	private List<WormHole> wormholeToBuild = new ArrayList<>();
 	private List<WormHole> wormholeHaveBuilt = new ArrayList<>();
+	
+	private long longestGameEventReceiveExecution = 0;
 
 	public AIContainer(ManualAI ai, GameStateHolder gameStateHolder) {
 
@@ -77,6 +79,10 @@ public class AIContainer {
 			scheduler.execute(runner);
 			
 			val elapsed = System.currentTimeMillis() - timeStarted;
+			
+			if (elapsed > longestGameEventReceiveExecution) {
+				longestGameEventReceiveExecution = elapsed;
+			}
 			
 			if (elapsed > 20) {
 				log.warn(String.format("AIContainer.receiveGameEvent execution took: %d ms", elapsed));
@@ -150,6 +156,7 @@ public class AIContainer {
 			case GAME_STARTED:
 				gameState = new GameState(event.getGame(), playerId, gameActionApi);
 				runner.startGame(gameState);
+				longestGameEventReceiveExecution = 0;
 
 				break;
 
@@ -206,6 +213,9 @@ public class AIContainer {
 
 			case GAME_ENDED:
 				ai.stop();
+				runner.signalStop();
+				
+				log.info(String.format("Longest AIContainer.receiveGameEvent execution took %d ms", longestGameEventReceiveExecution));
 
 				break;
 		}

@@ -477,7 +477,6 @@ class UISVGController {
             // Add the line to the DOM
             this.#svgContainer.appendChild(line);
         }
-
     }
 
     #drawLine(x, y, len, angleRad, color) {
