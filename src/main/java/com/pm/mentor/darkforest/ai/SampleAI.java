@@ -4,12 +4,13 @@ import com.loxon.javachallenge.challenge.game.event.action.EntryPointIndex;
 import com.loxon.javachallenge.challenge.game.model.WormHole;
 import com.pm.mentor.darkforest.ai.model.AIPlanet;
 import com.pm.mentor.darkforest.ai.model.ClosestToGivenPlanetWithWormholeComparator;
+import com.pm.mentor.darkforest.ai.model.PlanetDistance;
 import com.pm.mentor.darkforest.util.Point;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.loxon.javachallenge.challenge.game.event.GameEvent;
-import com.pm.mentor.darkforest.ai.model.AIPlanet;
 import com.pm.mentor.darkforest.ai.model.ClosestToGivenPlanetComparator;
 import com.pm.mentor.darkforest.ai.model.GameState;
 
@@ -88,9 +89,61 @@ public class SampleAI implements AI {
 			buildWormhole(planet);
 		}
 
+		val playerPlanets = gameState.getPlayerPlanets();
 
-		sendMissionsToNearbyPlanets();
-		missileShower();
+		int avaibleActionNumber = gameState.availableActionCount();
+
+        /*
+		val closestUnknownPlanets = gameState.getColonizablePlanets(gameState.createClosestToPlayerPlanetComparatorWithWormholes()).subList(0, avaibleActionNumber);
+		val closestEnemyPlanets = gameState.getEnemyPlanet(gameState.createClosestToPlayerPlanetComparator()).subList(0, avaibleActionNumber);;
+		sendMissionsToNearbyPlanets(playerPlanets, closestUnknownPlanets);
+		missileShower(closestEnemyPlanets);
+		 */
+
+		Map<AIPlanet, Double> colonizablePlanetsMap = gameState.getColonizablePlanets();
+		Map<AIPlanet, Double> enemyPlanetMap = gameState.getEnemyPlanet();
+
+		List<PlanetDistance> colonizablePlanets = colonizablePlanetsMap.entrySet().stream()
+				.sorted(Map.Entry.comparingByValue())
+				.map(e -> new PlanetDistance(e.getKey(), e.getValue()))
+				.filter(gameState.createTargetedPlanetDistanceFilter()).limit(avaibleActionNumber).toList();
+		List<PlanetDistance> enemyPlanets = enemyPlanetMap.entrySet().stream()
+				.sorted(Map.Entry.comparingByValue())
+				.map(e -> new PlanetDistance(e.getKey(), e.getValue()))
+				.filter(x -> !x.getPlanet().isAlreadyShot())
+				.filter(gameState.createTargetedPlanetDistanceFilter())
+				.limit(avaibleActionNumber)
+				.toList();
+
+		log.trace("colonizablePlanets: " + colonizablePlanets);
+		log.trace("enemyPlanets: " + enemyPlanets);
+
+		int p = 0;
+		int e = 0;
+		int actionNumber = 0;
+
+		while(actionNumber < avaibleActionNumber){
+			double d1 = colonizablePlanets.get(p).getDistance();
+			double d2 = Double.MAX_VALUE;
+			if(!enemyPlanets.isEmpty()){
+				d2 = enemyPlanets.get(e).getDistance();
+			}
+
+
+			if(d1 < d2) {
+				//do space mission
+				spaceMissionToTarget(playerPlanets, colonizablePlanets.get(p).getPlanet());
+				p++;
+				actionNumber++;
+			} else {
+				//do missile shoot
+				shootFromClosestPlanet(playerPlanets, enemyPlanets.get(e).getPlanet());
+				e++;
+				actionNumber++;
+			}
+
+		}
+
 	}
 
 	private void buildWormhole(AIPlanet startPlanet) {
@@ -109,14 +162,9 @@ public class SampleAI implements AI {
 
 	}
 
-	private void sendMissionsToNearbyPlanets() {
-		log.trace("sendMissionsToNearbyPlanets");
-
-		val playerPlanets = gameState.getPlayerPlanets();
-		log.trace(String.format("number of player planets: %d", playerPlanets.size()));
-		val closestUnknownPlanets = gameState.getColonizablePlanets(gameState.createClosestToPlayerPlanetComparatorWithWormholes());
-
-		log.trace(String.format("Number of unknown planets: %d", closestUnknownPlanets.size()));
+	private void sendMissionsToNearbyPlanets(
+			List<AIPlanet> playerPlanets,
+			List<AIPlanet> closestUnknownPlanets) {
 
 		if (closestUnknownPlanets.size() > 0) {
 			val targetPlanets = closestUnknownPlanets.stream()
@@ -128,31 +176,33 @@ public class SampleAI implements AI {
 
 			for (val target : targetPlanets) {
 
-				if(gameState.getWormHoles().size() == 0){
-					val closestPlayerPlanet = playerPlanets.stream()
-							.sorted(new ClosestToGivenPlanetComparator(target))
-							.findFirst();
+				spaceMissionToTarget(playerPlanets, target);
+			}
+		}
+	}
 
-					if (closestPlayerPlanet.isPresent()) {
-						val playerPlanet = closestPlayerPlanet.get();
-						log.trace(String.format("Sending mission from %d to %d", playerPlanet.getId(), target.getId()));
-						gameState.spaceMission(playerPlanet, target);
-					}
-				} else {
+	private void spaceMissionToTarget(List<AIPlanet> playerPlanets, AIPlanet target) {
+		if(gameState.getWormHoles().size() == 0){
+			val closestPlayerPlanet = playerPlanets.stream()
+					.sorted(new ClosestToGivenPlanetComparator(target))
+					.findFirst();
 
-					//TODO: get closest wormhole to planet
-					WormHole closestWormhole = gameState.getWormHoles().get(0);
+			if (closestPlayerPlanet.isPresent()) {
+				val playerPlanet = closestPlayerPlanet.get();
+				log.trace(String.format("Sending mission from %d to %d", playerPlanet.getId(), target.getId()));
+				gameState.spaceMission(playerPlanet, target);
+			}
+		} else {
 
-					val closestPlayerPlanet = playerPlanets.stream()
-							.sorted(new ClosestToGivenPlanetWithWormholeComparator(target, closestWormhole))
-							.findFirst();
+			//TODO: get closest wormhole to planet
+			WormHole closestWormhole = gameState.getWormHoles().get(0);
 
-					if (closestPlayerPlanet.isPresent()) {
-						val playerPlanet = closestPlayerPlanet.get();
+			val closestPlayerPlanet = playerPlanets.stream().min(new ClosestToGivenPlanetWithWormholeComparator(target, closestWormhole));
 
-						spaceMission(playerPlanet, target, closestWormhole);
-					}
-				}
+			if (closestPlayerPlanet.isPresent()) {
+				val playerPlanet = closestPlayerPlanet.get();
+
+				spaceMission(playerPlanet, target, closestWormhole);
 			}
 		}
 	}
@@ -191,14 +241,14 @@ public class SampleAI implements AI {
 
 	}
 
-	private void missileShower() {
+	private void missileShower(List<AIPlanet> closestEnemyPlanets) {
 		if (!gameState.hasFreeAction() ) {
 			return;
 		}
 
 		log.trace("missileShower");
 
-		val nonDestroyedPlanets = gameState.getDestroyablePlanets()
+		val nonDestroyedPlanets = closestEnemyPlanets
 				.stream()
 				.filter(x -> !x.isAlreadyShot())
 				.sorted(gameState.createClosestToPlayerPlanetComparator())
@@ -215,17 +265,21 @@ public class SampleAI implements AI {
 			val playerPlanets = gameState.getPlayerPlanets();
 
 			for (val target : targetPlanets) {
-				val closestPlayerPlanet = playerPlanets.stream()
-						.sorted(new ClosestToGivenPlanetComparator(target))
-						.findFirst();
-
-				if (closestPlayerPlanet.isPresent()) {
-					val playerPlanet = closestPlayerPlanet.get();
-
-					log.trace(String.format("Sending mission from %d to %d", playerPlanet.getId(), target.getId()));
-					gameState.shootMBH(playerPlanet, target);
-				}
+				shootFromClosestPlanet(playerPlanets, target);
 			}
+		}
+	}
+
+	private void shootFromClosestPlanet(List<AIPlanet> playerPlanets, AIPlanet target) {
+		val closestPlayerPlanet = playerPlanets.stream()
+				.sorted(new ClosestToGivenPlanetComparator(target))
+				.findFirst();
+
+		if (closestPlayerPlanet.isPresent()) {
+			val playerPlanet = closestPlayerPlanet.get();
+
+			log.trace(String.format("Shoot mbh from %d to %d", playerPlanet.getId(), target.getId()));
+			gameState.shootMBH(playerPlanet, target);
 		}
 	}
 }

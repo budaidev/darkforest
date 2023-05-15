@@ -1,5 +1,6 @@
 package com.pm.mentor.darkforest.ai.model;
 
+import com.pm.mentor.darkforest.util.PointToPointDistanceCache;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -43,6 +44,8 @@ public class GameState {
 	private final GravityWaveCollector actionEffectCollector;
 
 	List<WormHole> wormHoles = new ArrayList<>();
+
+	PointToPointDistanceCache distanceCache;
 	
 	public GameState(Game game, int playerId, GameActionApi gameActionApi) {
 		this.playerId = playerId;
@@ -54,6 +57,7 @@ public class GameState {
 		actionApi = gameActionApi;
 		
 		actionEffectCollector = new GravityWaveCollector(game.getPlayers(), planets, playerId, settings);
+		distanceCache = new PointToPointDistanceCache();
 	}
 	
 	public int getMaxConcurrentActionCount() {
@@ -96,6 +100,33 @@ public class GameState {
 
 		return Optional.of(min);
 	}
+
+	@Synchronized
+	public Map<AIPlanet, Double> getColonizablePlanets() {
+		DistanceToPlayerPlanetCalculator calculator = getDistanceCalculatorWithWormholes();
+		return calculator.calculateDistances(planets.stream()
+				.filter(AIPlanet::isSpaceMissionPossible)
+				.collect(Collectors.toList()));
+	}
+
+	@Synchronized
+	public Map<AIPlanet, Double> getEnemyPlanet() {
+		DistanceToPlayerPlanetCalculator calculator = getDistanceCalculator();
+		return calculator.calculateDistances(planets.stream()
+				.filter(p -> p.getOwner() != playerId && p.getOwner() != 0 && !p.isDestroyed())
+				.collect(Collectors.toList()));
+	}
+
+
+	@Synchronized
+	private DistanceToPlayerPlanetCalculator getDistanceCalculator(){
+		return new DistanceToPlayerPlanetCalculator(getPlayerPlanets(), distanceCache);
+	}
+
+	@Synchronized
+	private DistanceToPlayerPlanetCalculator getDistanceCalculatorWithWormholes(){
+		return new DistanceToPlayerPlanetCalculator(getPlayerPlanets(), getWormHoles(),distanceCache);
+	}
 	
 	@Synchronized
 	public List<AIPlanet> getColonizablePlanets(Comparator<? super AIPlanet> comparator) {
@@ -103,6 +134,14 @@ public class GameState {
 			.filter(p -> p.isSpaceMissionPossible())
 			.sorted(comparator)
 			.collect(Collectors.toList());
+	}
+
+	@Synchronized
+	public List<AIPlanet> getEnemyPlanet(Comparator<? super AIPlanet> comparator) {
+		return planets.stream()
+				.filter(p -> p.getOwner() != playerId && !p.isDestroyed())
+				.sorted(comparator)
+				.collect(Collectors.toList());
 	}
 
 	@Synchronized
@@ -305,6 +344,10 @@ public class GameState {
 	
 	public Predicate<AIPlanet> createTargetedPlanetFilter() {
 		return new TargetedPlanetFilter(this);
+	}
+
+	public Predicate<PlanetDistance> createTargetedPlanetDistanceFilter() {
+		return new TargetedPlanetDistanceFilter(this);
 	}
 
 	private List<ActionResponse> getActionsCompletedBefore(long timestamp, int safetyThreshold) {
