@@ -177,6 +177,7 @@ class UISVGController {
     #planetPopupElements;
     #waveElements;
     #effectCounterElements;
+    #effectPopupElements;
 
     #allowAnimation = true;
 
@@ -270,6 +271,7 @@ class UISVGController {
         this.#waveElements = [];
         this.#planets = new Map();
         this.#effectCounterElements = new Map();
+        this.#effectPopupElements = new Map();
 
         this.#playerDict = {
             0: 0
@@ -292,35 +294,25 @@ class UISVGController {
      * @param {Array<Planet>} planets 
      */
     #renderPlanets(planets) {
-        const popups = [];
+        const planetPopups = [];
+        const effectPopups = [];
         for (const planet of planets) {
             if (this.#planetElements.has(planet.id)) {
                 this.#updatePlanetElement(planet, this.#planetElements.get(planet.id));
                 this.#updatePlanetPopupElement(planet, this.#planetPopupElements.get(planet.id));
                 this.#updatePlanetEffectCounter(planet, this.#effectCounterElements.get(planet.id));
             } else {
-                const planetDiv = this.#createPlanetElement(planet);
-
-                this.#planetElements.set(planet.id, planetDiv);
                 this.#planets.set(planet.id, planet);
-                this.#svgContainer.appendChild(planetDiv);
 
-                const planetPopup = this.#createPlanetPopup(planet);
-                this.#planetPopupElements.set(planet.id, planetPopup);
-
-                const effectCounter = this.#createPlanetEffectCounter(planet);
-                this.#effectCounterElements.set(planet.id, effectCounter);
-
-                SVGFactory.applyProperties(planetDiv, {
-                    onmouseenter: `show('planet-popup-${planet.id}')`,
-                    onmouseleave: `hide('planet-popup-${planet.id}')`,
-                });
-
-                popups.push(planetPopup);
+                this.#createPlanetElement(planet);
+                planetPopups.push(this.#createPlanetPopup(planet));
+                this.#createEffectCounter(planet);
+                effectPopups.push(this.#createEffectPopup(planet));
             }
         }
 
-        popups.forEach(planetPopup => this.#svgContainer.appendChild(planetPopup));
+        planetPopups.forEach(planetPopup => this.#svgContainer.appendChild(planetPopup));
+        effectPopups.forEach(effectPopup => this.#svgContainer.appendChild(effectPopup));
     }
 
     /**
@@ -328,16 +320,24 @@ class UISVGController {
      * @returns {HTMLDivElement}
      */
     #createPlanetElement(planet) {
-        const planetDiv = SVGFactory.createElement('circle');
-        planetDiv.id = 'planet' + planet.id
+        const planetElement = SVGFactory.createElement('circle');
+        planetElement.id = 'planet' + planet.id
 
-        SVGFactory.applyProperties(planetDiv, {
+        SVGFactory.applyProperties(planetElement, {
             r: UISVGController.#PlanetSize
         });
         
-        this.#updatePlanetElement(planet, planetDiv);
+        this.#updatePlanetElement(planet, planetElement);
 
-        return planetDiv;
+        this.#svgContainer.appendChild(planetElement);
+        this.#planetElements.set(planet.id, planetElement);
+
+        SVGFactory.applyProperties(planetElement, {
+            onmouseenter: `show('planet-popup-${planet.id}')`,
+            onmouseleave: `hide('planet-popup-${planet.id}')`,
+        });
+
+        return planetElement;
     }
 
     /**
@@ -373,43 +373,52 @@ class UISVGController {
         const rectY = renderedPosition.y - UISVGController.#PlanetSize;
 
         const infoList = this.#createPlanetInfo(planet);
-        const textLength = infoList.reduce((acc, current) => Math.max(acc, current.length), `${planet.id}`.length);
+        const id = `planet-popup-${planet.id}`;
+
+        const element = this.#createGenericPopup(rectX, rectY, [displayedName, ...infoList], id);
+        this.#planetPopupElements.set(planet.id, element);
+
+        return element;
+    }
+
+    #createGenericPopup(x, y, textContents, id) {
+        const textLength = textContents.reduce((acc, current) => Math.max(acc, current.length), 0);
 
         const rect = SVGFactory.createElement('rect', {
-            x: rectX,
-            y: rectY,
+            x: x,
+            y: y,
             width: textLength*8 + UISVGController.#PopupPadding*2 + 2,
-            height: (infoList.length+1) * UISVGController.#PopupFontSize + 2 + UISVGController.#PopupPadding*2,
+            height: (textContents.length) * UISVGController.#PopupFontSize + 2 + UISVGController.#PopupPadding*2,
             fill: 'white'
         });
 
         const titleText = SVGFactory.createElement('text', {
-            x: rectX + UISVGController.#PopupPadding,
-            y: rectY + UISVGController.#PopupFontSize + UISVGController.#PopupPadding,
+            x: x + UISVGController.#PopupPadding,
+            y: y + UISVGController.#PopupFontSize + UISVGController.#PopupPadding,
             'font-size': UISVGController.#PopupFontSize,
             'font-weight': 'bold',
             'font-family': 'Courier'
         });
 
-        titleText.textContent = displayedName;
+        titleText.textContent = textContents[0];
 
         const group = SVGFactory.createElement('g', {
             visibility: 'hidden'
         });
-        group.id = `planet-popup-${planet.id}`
+        group.id = id;
         group.appendChild(rect);
         group.appendChild(titleText);
 
-        for (let i = 0; i < infoList.length; i++) {
+        for (let i = 1; i < textContents.length; i++) {
             const infoText = SVGFactory.createElement('text', {
-                x: rectX + UISVGController.#PopupPadding,
-                y: rectY + (i+2) * UISVGController.#PopupFontSize + UISVGController.#PopupPadding,
+                x: x + UISVGController.#PopupPadding,
+                y: y + (i+2) * UISVGController.#PopupFontSize + UISVGController.#PopupPadding,
                 'font-size': UISVGController.#PopupFontSize,
                 'font-weight': 'normal',
                 'font-family': 'Courier'
             });
 
-            infoText.textContent = infoList[i];
+            infoText.textContent = textContents[i];
             group.appendChild(infoText);
         }
 
@@ -448,29 +457,54 @@ class UISVGController {
         }
     }
 
-    #createPlanetEffectCounter(planet) {
+    #createEffectCounter(planet) {
         const effectElement = SVGFactory.createElement('text', {
             'font-size': 12,
             'font-weight': 'normal',
-            'font-family': 'Courier'
+            'font-family': 'Courier',
+            onmouseenter: `show('effect-popup-${planet.id}')`,
+            onmouseleave: `hide('effect-popup-${planet.id}')`,
         });
 
         this.#updatePlanetEffectCounter(planet, effectElement);
 
         this.#svgContainer.appendChild(effectElement);
+        this.#effectCounterElements.set(planet.id, effectElement);
 
         return effectElement;
     }
 
+    #createEffectPopup(planet) {
+        const pos = this.#calculatePlanetEffectCounterPosition(planet);
+        const xOffset = `${planet.effectsEmitted.length}`.length * 8;
+        const title = 'Effects emitted from here';
+
+        const infoList = this.#createPlanetInfo(planet);
+        const id = `effect-popup-${planet.id}`;
+
+        const element = this.#createGenericPopup(pos.x + xOffset, pos.y, [title, ...infoList], id);
+        this.#effectPopupElements.set(planet.id, element);
+
+        return element;
+    }
+
     #updatePlanetEffectCounter(planet, effectCounterElement) {
-        const renderedPlanetPosition = this.#calculateRenderedPosition(planet.pos.x, planet.pos.y);
+        const pos = this.#calculatePlanetEffectCounterPosition(planet);
 
         SVGFactory.applyProperties(effectCounterElement, {
-            x: renderedPlanetPosition.x - `${planet.effectsEmitted.length}`.length * 4 + 2,
-            y: renderedPlanetPosition.y - UISVGController.#PlanetSize - 4,
+            x: pos.x,
+            y: pos.y,
         });
 
         effectCounterElement.textContent = planet.effectsEmitted.length;
+    }
+
+    #calculatePlanetEffectCounterPosition(planet) {
+        const renderedPlanetPosition = this.#calculateRenderedPosition(planet.pos.x, planet.pos.y);
+
+        return new Position(
+            renderedPlanetPosition.x - `${planet.effectsEmitted.length}`.length * 4 + 2,
+            renderedPlanetPosition.y - UISVGController.#PlanetSize - 4);
     }
 
     #createPlanetInfo(planet) {
