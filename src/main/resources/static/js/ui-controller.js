@@ -552,6 +552,11 @@ class UISVGController {
         });
 
         effectCounterElement.textContent = planet.effectsEmitted.length;
+
+        if (planet.effectsEmitted.length > 0) {
+            const color = this.#getPlayerColor(planet.effectsEmitted[planet.effectsEmitted.length-1].p);
+            effectCounterElement.style.fill = color;
+        }
     }
 
     #calculatePlanetEffectCounterPosition(planet) {
