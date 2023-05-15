@@ -239,7 +239,7 @@ public class GravityWaveCollector {
         }
 
         private boolean isCloseEnough(double a, double b) {
-            return Math.abs(a - b) < 1;
+            return Math.abs(a - b) < 10;
         }
 
         private double getEffectSpeed(ActionEffect effect) {
