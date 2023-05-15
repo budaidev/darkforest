@@ -31,6 +31,7 @@ public class PlanetWebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
+    @SneakyThrows
     public void handleTextMessage(WebSocketSession session, TextMessage message) throws JsonProcessingException {
         if (message.getPayload().equals("getJson")) {
             // Retrieve the JSON data and send it to the client
@@ -39,6 +40,8 @@ public class PlanetWebSocketHandler extends TextWebSocketHandler {
                 session.sendMessage(new TextMessage(jsonData));
             } catch (IOException e) {
                 e.printStackTrace();
+				
+				throw e;
             }
         }
     }
