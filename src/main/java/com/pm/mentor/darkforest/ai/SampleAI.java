@@ -102,6 +102,15 @@ public class SampleAI implements AI {
 		missileShower(closestEnemyPlanets);
 		 */
 
+		missionAndMissileTactic(playerPlanets, avaibleActionNumber);
+		if(gameState.hasFreeAction()){
+			log.info("We did not use all the actions!");
+		}
+
+
+	}
+
+	private void missionAndMissileTactic(List<AIPlanet> playerPlanets, int avaibleActionNumber) {
 		Map<AIPlanet, Double> colonizablePlanetsMap = gameState.getColonizablePlanets();
 		Map<AIPlanet, Double> enemyPlanetMap = gameState.getEnemyPlanet();
 
@@ -169,11 +178,6 @@ public class SampleAI implements AI {
 				}
 			}
 		}
-		if(gameState.hasFreeAction()){
-			log.info("We did not use all the actions!");
-		}
-
-
 	}
 
 	private void buildWormhole(AIPlanet startPlanet) {
