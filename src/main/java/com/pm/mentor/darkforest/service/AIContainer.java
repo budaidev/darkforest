@@ -1,5 +1,6 @@
 package com.pm.mentor.darkforest.service;
 
+import com.loxon.javachallenge.challenge.game.event.action.ErectShieldAction;
 import com.loxon.javachallenge.challenge.game.event.action.ShootMBHAction;
 import com.pm.mentor.darkforest.ai.model.AIPlanet;
 import java.io.PrintWriter;
@@ -36,11 +37,11 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @Slf4j
 public class AIContainer {
-	
+
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 	private AIRunner runner;
 	private ScheduledFuture<?> scheduledTask;
-	
+
 	private GameActionApi gameActionApi;
 	private GameState gameState;
 	private GameStateHolder gameStateHolder;
@@ -51,7 +52,7 @@ public class AIContainer {
 
 	private List<WormHole> wormholeToBuild = new ArrayList<>();
 	private List<WormHole> wormholeHaveBuilt = new ArrayList<>();
-	
+
 	private long longestGameEventReceiveExecution = 0;
 
 	public AIContainer(ManualAI ai, GameStateHolder gameStateHolder) {
@@ -59,7 +60,7 @@ public class AIContainer {
 		this.ai = ai;
 		this.gameStateHolder = gameStateHolder;
 	}
-	
+
 	public void create() {
 		if (scheduledTask != null && !scheduledTask.isDone()) {
 			scheduledTask.cancel(true);
@@ -68,24 +69,24 @@ public class AIContainer {
 		runner = new AIRunner();
 		ai = new SampleAI();
 		runner.init(ai);
-		
+
 		scheduledTask = scheduler.scheduleAtFixedRate(runner, 0, 1000, TimeUnit.MILLISECONDS);
 	}
-	
+
 	public void receiveGameEvent(GameEvent event) {
 		try {
 			val timeStarted = System.currentTimeMillis();
-			
+
 			handleGameEvent(event);
 			runner.receiveEvent(event);
 			scheduler.execute(runner);
-			
+
 			val elapsed = System.currentTimeMillis() - timeStarted;
-			
+
 			if (elapsed > longestGameEventReceiveExecution) {
 				longestGameEventReceiveExecution = elapsed;
 			}
-			
+
 			if (elapsed > 20) {
 				log.warn(String.format("AIContainer.receiveGameEvent execution took: %d ms", elapsed));
 			} else {
@@ -94,10 +95,10 @@ public class AIContainer {
 		} catch (Exception e) {
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
-			
+
 			e.printStackTrace(pw);
 			String sStackTrace = sw.toString();
-			
+
 			log.error(sStackTrace);
 		}
 	}
@@ -106,21 +107,21 @@ public class AIContainer {
 		switch (event.getEventType()) {
 			case ACTION:
 				val actionResponse = event.getAction();
-				
+
 				if (actionResponse.getResult() != ActionResult.SUCCESS) {
 					log.warn(String.format("Cannot execute action: %s", actionResponse.toString()));
-					
+
 					break;
 				}
-				
+
 				val action = actionResponse.getAction();
-				
+
 				log.info(String.format("ActionResponse received: %s", actionResponse));
-				
+
 				// action response for an action we did not send?
 				if (!gameState.getInitiatedActions().containsKey(action.getRefId())) {
 					log.warn(String.format("Response for non-existent action received: %s", actionResponse.toString()));
-					
+
 					return;
 				}
 
@@ -139,14 +140,18 @@ public class AIContainer {
 					ShootMBHAction shootAction = (ShootMBHAction) action;
 					gameState.tryFindPlayerPlanet(shootAction.getTargetId()).ifPresent(AIPlanet::shoot);
 
+				} else if(action.getType() == GameActionType.ERECT_SHIELD) {
+					ErectShieldAction erectShieldAction = (ErectShieldAction) action;
+					gameState.tryFindPlayerPlanet(erectShieldAction.getTargetId()).
+							ifPresent(p -> p.shield(event.getEventTime(), gameState.getSettings().getShildDuration()));
 				}
-				
+
 				// remove the action from the initiated actions list
 				gameState.getInitiatedActions().remove(action.getRefId());
-				
+
 				// add to active actions list
 				gameState.getActiveActions().put(action.getRefId(), actionResponse);
-				
+
 				break;
 
 			case CONNECTION_RESULT:
@@ -183,11 +188,17 @@ public class AIContainer {
 						gameState.wormHoleBuilt(hole);
 
 					}
+				} else if (actionEffect.getEffectChain().contains(ActionEffectType.SHIELD_DESTROYED)) {
+					log.info("Shield destroyed");
+
+				} else if (actionEffect.getEffectChain().contains(ActionEffectType.SHIELD_TIMEOUT)) {
+					gameState.shieldTimeout(actionEffect.getAffectedMapObjectId());
+					log.info("Shield timeout");
 				}
-				
+
 				if (gameState.isEffectPlayerRelated(actionEffect) ) {
 					val originalAction = gameState.tryFindOriginalPlayerAction(actionEffect);
-					
+
 					originalAction.ifPresent(origAction -> gameState.handlePlayerActionFallout(origAction, actionEffect));
 				} else {
 					gameState.nonPlayerEffectArrived(actionEffect);
@@ -195,9 +206,9 @@ public class AIContainer {
 
 				gameStateHolder.updateWormholes(gameState.getWormHoles());
 				gameStateHolder.updatePlanetStatus(gameState.getPlanets());
-				
+
 				break;
-				
+
 			case ATTRIBUTE_CHANGE:
 				val changes = event.getChanges();
 
@@ -212,9 +223,9 @@ public class AIContainer {
 						}
 					}
 				}
-				
+
 				log.info(String.format("AttributeChange received: %s", event.getChanges().toString()));
-				
+
 				gameState.handleAttributeChange(event);
 
 				break;
@@ -225,15 +236,15 @@ public class AIContainer {
 
 				log.info(String.valueOf(event.getGameStats()));
 
-				
+
 				log.info(String.format("Longest AIContainer.receiveGameEvent execution took %d ms", longestGameEventReceiveExecution));
 
 				break;
 		}
-		
+
 		if (gameState != null) {
 			gameState.purgeStuckActions(event.getEventTime());
-			
+
 			gameStateHolder.setActions(gameState.getInitiatedActions().values(), gameState.getActiveActions().values());
 		}
 	}
@@ -245,12 +256,12 @@ public class AIContainer {
 	public boolean isCreated() {
 		return runner != null;
 	}
-	
+
 	public void shutdown() {
 		if (scheduledTask != null && !scheduledTask.isDone()) {
 			scheduledTask.cancel(true);
 		}
-		
+
 		try {
 			scheduler.shutdown();
 

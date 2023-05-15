@@ -44,6 +44,11 @@ public class AIPlanet {
     @Getter
     private final List<ActionEffect> effectsEmitted;
 
+    @Getter
+    private long shieldedUntil = 0;
+
+    private boolean hasShield = false;
+
     public AIPlanet(Planet p) {
         id = p.getId();
         pos = new Point(p.getX(), p.getY());
@@ -87,6 +92,10 @@ public class AIPlanet {
         alreadyShot = true;
     }
 
+    public void shield(long time, long duration) {
+        shieldedUntil = time + duration;
+    }
+
     public void blameEffect(ActionEffect effect, GameState state) {
         if (effect.getEffectChain().stream()
                 .anyMatch(x -> x.equals(ActionEffectType.SPACE_MISSION_GRAWITY_WAVE_PASSING))) {
@@ -125,5 +134,13 @@ public class AIPlanet {
     	val distanceToAffected = PointToPointDistanceCache.distance(playerPlanet.pos, this.pos);
     	
         return (long) (distanceToAffected * state.getSettings().getTimeOfOneLightYear());
+    }
+
+    public void disableShield() {
+        hasShield = false;
+    }
+
+    public boolean hasShield() {
+        return hasShield;
     }
 }
