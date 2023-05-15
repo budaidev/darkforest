@@ -28,9 +28,9 @@ public class World {
     /**
      * Tárolja az univerzumban található bolygókat.
      */
-    private List<Planet> planets = new ArrayList<Planet>();
+    private List<Planet> planets = new ArrayList<>();
     /**
      * Tárolja az univerumban található féreglyukakat.
      */
-    @JsonIgnore private List<WormHole> wormHoles = new ArrayList<WormHole>();
+    private List<WormHole> wormHoles = new ArrayList<>();
 }

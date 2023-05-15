@@ -54,6 +54,6 @@ public class AttributeChanges {
     	if (!isForPlayer()) {
 			return false;
 		}
-    	return "extinct".equals(changes.get(0).getName());
+    	return changes.size() > 0 && "extinct".equals(changes.get(0).getName());
     }
 }
