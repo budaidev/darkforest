@@ -109,9 +109,14 @@ public class AIPlanet {
         effectsEmitted.add(effect);
 
         if (!destroyed) {
-            List<Long> effectsTime = effectsEmitted.stream().filter(x -> x.getEffectChain().stream()
+            List<Integer> effectsTime = effectsEmitted.stream()
+            		.filter(x -> x.getEffectChain().stream()
                             .anyMatch(y -> y.equals(ActionEffectType.MBH_HIT_GRAWITY_WAVE_PASSING)))
-                    .map(action -> action.getTime() - getActionTime(state, action)).toList();
+                    .map(action -> (int)(action.getTime() - getActionTime(state, action))) // cast to int so distinct can be applied despite imprecision in floating point calculations
+                    .distinct() // filter out different observations from the same event
+                    .sorted((x1, x2) -> x2.compareTo(x1)) // sort descending as there is no guarantee that effects are observed in the order they happened 
+                    .toList();
+
             if (effectsTime.size() >= 2) {
                 alreadyShot = true;
 
