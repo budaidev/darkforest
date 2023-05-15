@@ -198,7 +198,7 @@ window.g = await (async() => {
         const dropdownList = document.getElementById("dropdownList");
         const selectedType = dropdownList.value;
 
- 	    let gameConfig = new GameConfig([8, 8, 8], selectedType);
+ 	    let gameConfig = new GameConfig([1, 3, 5, 8], selectedType);
         if (selectedType === 'QUALIFYING') {
             gameConfig = new GameConfig([], selectedType);
         }
