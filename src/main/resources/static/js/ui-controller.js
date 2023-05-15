@@ -303,6 +303,7 @@ class UISVGController {
                 this.#updatePlanetElement(planet, this.#planetElements.get(planet.id));
                 this.#updatePlanetPopupElement(planet, this.#planetPopupElements.get(planet.id));
                 this.#updatePlanetEffectCounter(planet, this.#effectCounterElements.get(planet.id));
+                this.#updateEffectPopup(planet, this.#effectPopupElements.get(planet.id));
             } else {
                 this.#planets.set(planet.id, planet);
 
@@ -412,19 +413,24 @@ class UISVGController {
         group.appendChild(titleText);
 
         for (let i = 1; i < textContents.length; i++) {
-            const infoText = SVGFactory.createElement('text', {
-                x: x + UISVGController.#PopupPadding,
-                y: y + (i+2) * UISVGController.#PopupFontSize + UISVGController.#PopupPadding,
-                'font-size': UISVGController.#PopupFontSize,
-                'font-weight': 'normal',
-                'font-family': 'Courier'
-            });
-
-            infoText.textContent = textContents[i];
-            group.appendChild(infoText);
+            group.appendChild(this.#createPopupContentLineElement(x, y, i, textContents[i]));
         }
 
         return group;
+    }
+
+    #createPopupContentLineElement(popupX, popupY, lineNumber, text) {
+        const infoText = SVGFactory.createElement('text', {
+            x: popupX + UISVGController.#PopupPadding,
+            y: popupY + (lineNumber+1) * UISVGController.#PopupFontSize + UISVGController.#PopupPadding,
+            'font-size': UISVGController.#PopupFontSize,
+            'font-weight': 'normal',
+            'font-family': 'Courier'
+        });
+
+        infoText.textContent = text;
+
+        return infoText;
     }
 
     #updatePlanetPopupElement(planet, popupElement) {
@@ -434,28 +440,54 @@ class UISVGController {
         const rectY = renderedPosition.y - UISVGController.#PlanetSize;
 
         const infoList = this.#createPlanetInfo(planet);
-        const textLength = infoList.reduce((acc, current) => Math.max(acc, current.length), `${planet.id}`.length);
+
+        this.#updateGenericPopup(popupElement, rectX, rectY, [`${planet.id}`, ...infoList]);
+    }
+
+    #updateGenericPopup(popupElement, x, y, textContent, colors = undefined) {
+        const textLength = textContent.reduce((acc, current) => Math.max(acc, current.length), 0);
 
         SVGFactory.applyProperties(popupElement.children[0], {
-            x: rectX,
-            y: rectY,
+            x: x,
+            y: y,
             width: textLength*8 + UISVGController.#PopupPadding*2 + 2,
+            height: (textContent.length) * UISVGController.#PopupFontSize + 2 + UISVGController.#PopupPadding*2,
         });
 
         SVGFactory.applyProperties(popupElement.children[1], {
-            x: rectX + UISVGController.#PopupPadding,
-            y: rectY + UISVGController.#PopupFontSize + UISVGController.#PopupPadding,
+            x: x + UISVGController.#PopupPadding,
+            y: y + UISVGController.#PopupFontSize + UISVGController.#PopupPadding,
         });
 
-        for (let i = 0; i < infoList.length; i++) {
-            const infoText = popupElement.children[2 + i];
+        const existingLineCount = popupElement.children.length - 2;
+
+        for (let i = 1; i < existingLineCount; i++) {
+            const infoText = popupElement.children[1 + i];
 
             SVGFactory.applyProperties(infoText, {
-                x: rectX + UISVGController.#PopupPadding,
-                y: rectY + (i+2) * UISVGController.#PopupFontSize + UISVGController.#PopupPadding,
+                x: x + UISVGController.#PopupPadding,
+                y: y + (i+1) * UISVGController.#PopupFontSize + UISVGController.#PopupPadding,
             });
 
-            infoText.textContent = infoList[i];
+            infoText.textContent = textContent[i];
+
+            const color = colors !== undefined 
+                ? colors[i]
+                : undefined;
+
+            infoText.style.fill = color ?? 'black';
+        }
+
+        for (let i = existingLineCount; i < textContent.length; i++) {
+            const lineElement = this.#createPopupContentLineElement(x, y, i, textContent[i]);
+
+            const color = colors !== undefined 
+                ? colors[i] 
+                : undefined;
+
+            popupElement.appendChild(lineElement);
+
+            lineElement.style.fill = color ?? 'black';
         }
     }
 
@@ -481,13 +513,34 @@ class UISVGController {
         const xOffset = `${planet.effectsEmitted.length}`.length * 8;
         const title = 'Effects emitted from here';
 
-        const infoList = this.#createPlanetInfo(planet);
+        const popupContent = this.#createEffectPopupItems(planet);
+        const contentLines = popupContent.map(x => x.text)
         const id = `effect-popup-${planet.id}`;
 
-        const element = this.#createGenericPopup(pos.x + xOffset, pos.y, [title, ...infoList], id);
+        const element = this.#createGenericPopup(pos.x + xOffset, pos.y, [title, ...contentLines], id);
         this.#effectPopupElements.set(planet.id, element);
 
         return element;
+    }
+
+    #updateEffectPopup(planet, popupElement) {
+        const pos = this.#calculatePlanetEffectCounterPosition(planet);
+        const xOffset = `${planet.effectsEmitted.length}`.length * 8;
+        const title = 'Effects emitted from here';
+        const popupContent = this.#createEffectPopupItems(planet);
+        const contentLines = popupContent.map(x => x.text)
+        const colors = popupContent.map(x => x.color);
+
+        this.#updateGenericPopup(popupElement, pos.x + xOffset, pos.y, [title, ...contentLines], ['black', ...colors]);
+    }
+
+    #createEffectPopupItems(planet) {
+        return planet.effectsEmitted.map(effect => {
+            return {
+                text: `${effect.p} - ${effect.type} - ${effect.c}`,
+                color: this.#getPlayerColor(effect.p)
+            };
+        });
     }
 
     #updatePlanetEffectCounter(planet, effectCounterElement) {
@@ -517,6 +570,10 @@ class UISVGController {
             `space mission: ${planet.spaceMissionPossible}`,
             `shoot: ${planet.alreadyShot}`,
         ];
+    }
+
+    #getPlayerColor(playerId) {
+        return UISVGController.#Colors[this.#playerDict[playerId]];
     }
 
     /**

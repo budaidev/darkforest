@@ -79,11 +79,9 @@ public class GravityWaveCollector {
 
         double error = precision / 100.0 * 2 * Math.PI;
 
-        double past_dir_center = pastEffect.getDirection();
         double past_dir_up = pastEffect.getDirection() + error;
         double past_dir_down = pastEffect.getDirection() - error;
 
-        double current_dir_center = currentEffect.getDirection();
         double current_dir_up = currentEffect.getDirection() + error;
         double current_dir_down = currentEffect.getDirection() - error;
 
@@ -218,33 +216,33 @@ public class GravityWaveCollector {
             }
             return unsuccessfulResult();
         }
-    }
-
-    private CollectResult unsuccessfulResult() {
-        return new CollectResult(false, null);
-    }
-
-    private boolean shallSkipPlanet(AIPlanet planet) {
-        if (planet.isDestroyed()) {
-        	return true;
+        
+        private CollectResult unsuccessfulResult() {
+            return new CollectResult(false, null);
         }
 
-        if (planet.getOwner() == playerId) {
-            return true;
+        private boolean shallSkipPlanet(AIPlanet planet) {
+            if (planet.isDestroyed()) {
+            	return true;
+            }
+
+            if (planet.getOwner() == playerId) {
+                return true;
+            }
+
+            return false;
         }
 
-        return false;
-    }
+        private boolean isCloseEnough(double a, double b) {
+            return Math.abs(a - b) < 1;
+        }
 
-    private boolean isCloseEnough(double a, double b) {
-        return Math.abs(a - b) < 1;
-    }
-
-    private double getEffectSpeed(ActionEffect effect) {
-    	if (effect.getEffectChain().contains(ActionEffectType.SPACE_MISSION_GRAWITY_WAVE_PASSING)) {
-    		return lightSpeed * 2;
-    	}
-    	
-    	return lightSpeed;
+        private double getEffectSpeed(ActionEffect effect) {
+        	if (effect.getEffectChain().contains(ActionEffectType.SPACE_MISSION_GRAWITY_WAVE_PASSING)) {
+        		return lightSpeed * 2;
+        	}
+        	
+        	return lightSpeed;
+        }
     }
 }
