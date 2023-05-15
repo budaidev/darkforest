@@ -30,8 +30,10 @@ public class GravityWaveCollector {
     private final List<AIPlanet> planets;
     private final int playerId;
     private final GameSettings settings;
+    private final GameState gameState;
 
-    public GravityWaveCollector(List<Player> availablePlayers, List<AIPlanet> planets, int playerId, GameSettings settings) {
+    public GravityWaveCollector(List<Player> availablePlayers, List<AIPlanet> planets, int playerId, GameState gameState) {
+        this.settings = gameState.getSettings();
     	val mapHeight = settings.getHeight();
     	val mapWidth = settings.getWidth();
 
@@ -45,7 +47,9 @@ public class GravityWaveCollector {
         lightSpeed = settings.getTimeOfOneLightYear();
         maxEventLifetime = Math.sqrt(mapWidth * mapWidth + mapHeight * mapHeight) * lightSpeed;
 
-        this.settings = settings;
+
+
+        this.gameState= gameState;
     }
 
     public CollectResult collect(GravityWaveCrossing effect) {
@@ -186,7 +190,7 @@ public class GravityWaveCollector {
                         }
 
                         log.trace(String.format("This effect is originated from planet %d", potentialSource.getId()));
-                        potentialSource.blameEffect(currentEffect);
+                        potentialSource.blameEffect(currentEffect, gameState);
                         return new CollectResult(true, potentialSource);
                     }
                 }

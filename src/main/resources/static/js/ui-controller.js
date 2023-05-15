@@ -22,7 +22,7 @@ class Position {
 
 export default class UISVGController {
     static #PlanetSize = 12.5;
-    static #Colors = ["gray", "red", "blue", "green", "yellow", "orange", "purple", "pink", "brown"];
+    static #Colors = ["gray", "red", "blue", "green", "brown", "orange", "purple", "pink", "teal", "olive", "cyan", "magenta", "lime", "yellow", "navy", "maroon"];
     static #PopupFontSize = 14;
     static #PopupPadding = 5;
 
@@ -234,9 +234,7 @@ export default class UISVGController {
 
         if (planet.destroyed === true) {
             planetElement.style.fill = 'black';
-        }
-
-        if (planet.owner === 0 && planet.spaceMissionPossible === false) {
+        } else if (planet.owner === 0 && planet.spaceMissionPossible === false) {
             planetElement.style.fill = 'darkgrey';
         }
 

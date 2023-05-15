@@ -115,34 +115,62 @@ public class SampleAI implements AI {
 				.limit(avaibleActionNumber)
 				.toList();
 
-		log.trace("colonizablePlanets: " + colonizablePlanets);
-		log.trace("enemyPlanets: " + enemyPlanets);
+		log.info("colonizablePlanets: " + colonizablePlanets);
+		log.info("enemyPlanets: " + enemyPlanets);
 
 		int p = 0;
 		int e = 0;
 		int actionNumber = 0;
 
-		while(actionNumber < avaibleActionNumber){
-			double d1 = colonizablePlanets.get(p).getDistance();
-			double d2 = Double.MAX_VALUE;
-			if(!enemyPlanets.isEmpty()){
-				d2 = enemyPlanets.get(e).getDistance();
+		if(!colonizablePlanets.isEmpty() || !enemyPlanets.isEmpty()) {
+			while (actionNumber < avaibleActionNumber) {
+				double d1 = colonizablePlanets.get(p).getDistance();
+				double d2 = Double.MAX_VALUE;
+				if (!enemyPlanets.isEmpty()) {
+					d2 = enemyPlanets.get(e).getDistance();
+				}
+
+
+				if (d1 < d2) {
+					//do space mission
+					spaceMissionToTarget(playerPlanets, colonizablePlanets.get(p).getPlanet());
+					p++;
+					actionNumber++;
+				} else {
+					//do missile shoot
+					//TODO: check if close enough shot
+					if (actionNumber + 2 <= avaibleActionNumber) {
+						doubleShootFromClosestPlanet(playerPlanets, enemyPlanets.get(e).getPlanet());
+						actionNumber += 2;
+					} else {
+						shootFromClosestPlanet(playerPlanets, enemyPlanets.get(e).getPlanet());
+						actionNumber++;
+					}
+					e++;
+				}
+
 			}
-
-
-			if(d1 < d2) {
-				//do space mission
-				spaceMissionToTarget(playerPlanets, colonizablePlanets.get(p).getPlanet());
-				p++;
-				actionNumber++;
-			} else {
-				//do missile shoot
-				shootFromClosestPlanet(playerPlanets, enemyPlanets.get(e).getPlanet());
-				e++;
-				actionNumber++;
+		} else {
+			log.info("double shoot the rest of planets");
+			enemyPlanets = enemyPlanetMap.entrySet().stream()
+					.sorted(Map.Entry.comparingByValue())
+					.map(x -> new PlanetDistance(x.getKey(), x.getValue()))
+					.filter(gameState.createTargetedPlanetDistanceFilter())
+					.limit(avaibleActionNumber)
+					.toList();
+			int cnt = 0;
+			while (actionNumber < avaibleActionNumber && cnt < enemyPlanets.size()) {
+				if (actionNumber + 2 <= avaibleActionNumber) {
+					doubleShootFromClosestPlanet(playerPlanets, enemyPlanets.get(cnt).getPlanet());
+					actionNumber += 2;
+					cnt++;
+				}
 			}
-
 		}
+		if(gameState.hasFreeAction()){
+			log.info("We did not use all the actions!");
+		}
+
 
 	}
 
@@ -281,5 +309,19 @@ public class SampleAI implements AI {
 			log.trace(String.format("Shoot mbh from %d to %d", playerPlanet.getId(), target.getId()));
 			gameState.shootMBH(playerPlanet, target);
 		}
+	}
+
+	private void doubleShootFromClosestPlanet(List<AIPlanet> playerPlanets, AIPlanet target) {
+		val closestPlayerPlanet = playerPlanets.stream()
+				.sorted(new ClosestToGivenPlanetComparator(target)).limit(2).toList();
+
+		val playerPlanet = closestPlayerPlanet.get(0);
+		log.trace(String.format("Shoot mbh from %d to %d", playerPlanet.getId(), target.getId()));
+		gameState.shootMBH(playerPlanet, target);
+
+		val secondPlayerPlanet = closestPlayerPlanet.get(1);
+		log.trace(String.format("Shoot mbh from %d to %d", secondPlayerPlanet.getId(), target.getId()));
+		gameState.shootMBH(secondPlayerPlanet, target);
+
 	}
 }

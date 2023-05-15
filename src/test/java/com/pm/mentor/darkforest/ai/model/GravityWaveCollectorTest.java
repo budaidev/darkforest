@@ -24,12 +24,17 @@ import org.junit.jupiter.api.Test;
 public class GravityWaveCollectorTest {
 
 	private GameSettings settings;
+
+    private GameState gameState;
 	
     private GravityWaveCollector gravityWaveCollector;
     
     @BeforeEach
     public void setup() {
-    	settings = initSettings();
+
+        settings = initSettings();
+        gameState = new GameState(settings, 1);
+
     }
 
     @Test
@@ -52,7 +57,7 @@ public class GravityWaveCollectorTest {
         planets.add(createPlanet(10005, new Point(10, 50)));
 
         gravityWaveCollector = new GravityWaveCollector(
-                initPlayers(), planets, 1, settings
+                initPlayers(), planets, 1, gameState
         );
 
         System.out.println(gravityWaveCollector.filterPossiblePlanets(planets, pae1.effect, pae2.effect, 5));
@@ -82,7 +87,7 @@ public class GravityWaveCollectorTest {
         planets.add(pae2.planet);
 
         gravityWaveCollector = new GravityWaveCollector(
-                initPlayers(), planets, 1, settings
+                initPlayers(), planets, 1, gameState
         );
 
         CollectResult res1 = gravityWaveCollector.collect(pae1.effect);
@@ -110,7 +115,7 @@ public class GravityWaveCollectorTest {
         planets.add(pae2.planet);
 
         gravityWaveCollector = new GravityWaveCollector(
-                initPlayers(), planets, 1, settings
+                initPlayers(), planets, 1, gameState
         );
 
         CollectResult res1 = gravityWaveCollector.collect(pae1.effect);
@@ -139,7 +144,7 @@ public class GravityWaveCollectorTest {
     	planets.add(observer1);
     	planets.add(observer2);
 
-    	gravityWaveCollector = new GravityWaveCollector(initPlayers(), planets, 57, settings);
+    	gravityWaveCollector = new GravityWaveCollector(initPlayers(), planets, 57, gameState);
     	
     	val res1 = gravityWaveCollector.collect(createSpaceMissionPassingEffect(1683997777156L, 1.6454067077991554, 2306));
     	val res2 = gravityWaveCollector.collect(createSpaceMissionPassingEffect(1683997777345L, 0.7653616315096966, 2302));

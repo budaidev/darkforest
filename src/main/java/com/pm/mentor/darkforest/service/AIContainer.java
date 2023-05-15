@@ -222,6 +222,9 @@ public class AIContainer {
 			case GAME_ENDED:
 				ai.stop();
 				runner.signalStop();
+
+				log.info(String.valueOf(event.getGameStats()));
+
 				
 				log.info(String.format("Longest AIContainer.receiveGameEvent execution took %d ms", longestGameEventReceiveExecution));
 

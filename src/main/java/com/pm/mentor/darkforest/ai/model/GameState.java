@@ -1,5 +1,6 @@
 package com.pm.mentor.darkforest.ai.model;
 
+import com.loxon.javachallenge.challenge.game.model.Player;
 import com.pm.mentor.darkforest.util.PointToPointDistanceCache;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -56,7 +57,16 @@ public class GameState {
 				.collect(Collectors.toList());
 		actionApi = gameActionApi;
 		
-		actionEffectCollector = new GravityWaveCollector(game.getPlayers(), planets, playerId, settings);
+		actionEffectCollector = new GravityWaveCollector(game.getPlayers(), planets, playerId, this);
+		distanceCache = new PointToPointDistanceCache();
+	}
+
+	public GameState(GameSettings settings, int playerId) {
+		this.settings = settings;
+		this.playerId = playerId;
+		this.planets = new ArrayList<>();
+		this.actionApi = null;
+		actionEffectCollector = new GravityWaveCollector(List.of(new Player()), planets, playerId, this);
 		distanceCache = new PointToPointDistanceCache();
 	}
 	
