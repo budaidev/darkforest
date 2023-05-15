@@ -1,4 +1,4 @@
-class DropdownList {
+export default class DropdownList {
 
     #container
     #itemsList = [];

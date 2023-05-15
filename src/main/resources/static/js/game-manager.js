@@ -1,4 +1,4 @@
-class GameConfig {
+export class GameConfig {
     /**
      * @param {Array<number>} bots 
      * @param {string} gameType 
@@ -9,7 +9,7 @@ class GameConfig {
     }
 }
 
-class GameManager {
+export default class GameManager {
     static UrlRoot = 'http://localhost:8080';
 
     #currentGameKey = '';

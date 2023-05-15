@@ -112,13 +112,13 @@
             </div>
             
             <div>
-                <button type="button" onclick="getGameKey()">Get Game Key</button>
+                <button type="button" onclick="g.getGameKey()">Get Game Key</button>
                 <select id="selGameKey">
                 </select>
             </div>
 
             <div>
-                <button type="button" onclick="createGame()">Create Game</button>
+                <button type="button" onclick="g.createGame()">Create Game</button>
                 <select id="dropdownList">
                     <option value="SINGLE_PLAYER">SINGLE_PLAYER</option>
                     <option value="MULTI_PLAYER">MULTI_PLAYER</option>
@@ -129,17 +129,17 @@
             </div>
 
             <div>
-                <button type="button" onclick="connectWebSocket()">Connect Control WebSocket</button>
+                <button type="button" onclick="g.connectWebSocket()">Connect Control WebSocket</button>
             </div>
 
             <div>
-                <button type="button" onclick="startGame()">Start Game</button>
-                <button type="button" onclick="stopGame()">Stop Game</button>
+                <button type="button" onclick="g.startGame()">Start Game</button>
+                <button type="button" onclick="g.stopGame()">Stop Game</button>
             </div>
 
             <div>
-                <button type="button" onclick="getBots()">Get Bots</button>
-                <button type="button" onclick="testUi()">Test</button>
+                <button type="button" onclick="g.getBots()">Get Bots</button>
+                <button type="button" onclick="g.testUi()">Test</button>
             </div>
         </div>
 
@@ -156,16 +156,20 @@
     </div>
 
 </main>
-
-
-<script type="text/javascript" src="js/game-manager.js"></script>
-<script type="text/javascript" src="js/dropdownlist.js"></script>
-<script type="text/javascript" src="js/ui-controller.js"></script>
-<script type="text/javascript" src="js/websocket-manager.js"></script>
-<script type="text/javascript">
+<script type="module">
+window.g = await (async() => {
+    const uiControllerModule = await import('./js/ui-controller.js');
+    const UIController = uiControllerModule['default'];
+    window.show = uiControllerModule['show'];
+    window.hide = uiControllerModule['hide'];
+    const gameManagerModule = await import('./js/game-manager.js');
+    const GameConfig = gameManagerModule['GameConfig'];
+    const GameManager = gameManagerModule['default'];
+    const DropdownList = (await import('./js/dropdownlist.js'))['default'];
+    const WebSocketManager = (await import('./js/websocket-manager.js'))['default'];
 
     const gameManager = new GameManager();
-    const uiController = new UISVGController('container');
+    const uiController = new UIController('container');
     const webSocketManager = new WebSocketManager('txbConnectedToServer');
 
     webSocketManager.subscribeToMessage((message) => {
@@ -272,7 +276,20 @@
 
     historyDropDownInitializer(`${GameManager.UrlRoot}/gameKeyHistory`, gameKeySelector);
     historyDropDownInitializer(`${GameManager.UrlRoot}/gameIdHistory`, gameIdSelector);
-  
+
+    return {
+        getGameKey,
+        createGame,
+        connectWebSocket,
+        startGame,
+        stopGame,
+        getBots,
+        testUi
+    };
+
+})();
+
+console.log(g);
 </script>
 </body>
 </html>

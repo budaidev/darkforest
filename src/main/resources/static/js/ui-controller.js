@@ -1,66 +1,5 @@
-class GameEvent {
-
-    /**
-     * @param {number} width 
-     * @param {number} height 
-     * @param {Array<Planet>} planets 
-     * @param {Array<Wormhole>} wormholes
-     * @param {string} eventType
-     */
-    constructor(width, height, planets, wormHoles, eventType) {
-        this.width = width;
-        this.height = height;
-        this.planets = planets;
-        this.wormHoles = wormHoles;
-        this.eventType = eventType;
-    }
-}
-
-class Planet {
-
-    /**
-     * @param {number} id
-     * @param {Position} pos
-     * @param {string} color 
-     * @param {boolean} destroyed
-     * @param {boolean} spaceMissionPossible
-     * @param {number} owner
-     * @param {boolean} alreadyShot
-     * @param {Object} effectsEmitted
-     */
-    constructor(id, pos, color, destroyed, spaceMissionPossible, owner, alreadyShot, effectsEmitted) {
-        this.id = id;
-        this.pos = pos;
-        this.color = color;
-        this.destroyed = destroyed;
-        this.spaceMissionPossible = spaceMissionPossible;
-        this.owner = owner;
-        this.alreadyShot = alreadyShot
-        this.effectsEmitted = effectsEmitted;
-    }
-}
-
-class Wormhole {
-
-    /**
-     * @param {string} name 
-     * @param {number} x1 
-     * @param {number} y1 
-     * @param {number} x2 
-     * @param {number} y2 
-     * @param {string} color 
-     * @param {string} info 
-     */
-    constructor(name, x1, y1, x2, y2, color, info) {
-        this.name = name;
-        this.x1 = x1;
-        this.y1 = y1;
-        this.x2 = x2;
-        this.y2 = y2;
-        this.color = color;
-        this.info = info;
-    }
-}
+import { SVGFactory } from "./svg-factory.js";
+import { GameEvent, Planet, Wormhole } from './api-types.js';
 
 class Position {
     /**
@@ -81,76 +20,7 @@ class Position {
     }
 }
 
-class SVGFactory {
-    static #XMLNS = 'http://www.w3.org/2000/svg';
-
-    /**
-     * @param {Object} properties 
-     * @returns {Element}
-     */
-    static createViewBox(width, height) {
-        const svgElement = document.createElementNS(SVGFactory.#XMLNS, 'svg');
-
-        const properties = {
-            viewBox: `0 0 ${width} ${height}`,
-            preserveAspectRatio: 'none'
-        };
-
-        SVGFactory.applyProperties(svgElement, properties);
-
-        return svgElement;
-    }
-
-    /**
-     * @param {Object} properties 
-     * @returns {Element}
-     */
-    static createElement(name, properties) {
-        const svgElement = document.createElementNS(SVGFactory.#XMLNS, name);
-        SVGFactory.applyProperties(svgElement, properties);
-
-        return svgElement;
-    }
-
-    /**
-     * @param {Element} element 
-     * @param {Object | undefined} properties 
-     * @returns {void}
-     */
-    static applyProperties(element, properties = undefined) {
-        if (properties) {
-            for (const propName in properties) {
-                const propValue = properties[propName];
-
-                if (propValue !== undefined) {
-                    element.setAttributeNS(null, propName, propValue);
-                } else {
-                    element.removeAttributeNS(null, propName);
-                }
-            }
-        }
-    }
-}
-
-/**
- * @param {string} elementId 
- */
-const show = (elementId) => {
-    SVGFactory.applyProperties(document.getElementById(elementId), {
-        visibility: undefined
-    });
-}
-
-/**
- * @param {string} elementId 
- */
-const hide = (elementId) => {
-    SVGFactory.applyProperties(document.getElementById(elementId), {
-        visibility: 'hidden'
-    });
-}
-
-class UISVGController {
+export default class UISVGController {
     static #PlanetSize = 12.5;
     static #Colors = ["gray", "red", "blue", "green", "yellow", "orange", "purple", "pink", "brown"];
     static #PopupFontSize = 14;
@@ -251,10 +121,16 @@ class UISVGController {
         }
     }
 
+    /**
+     * @returns {void}
+     */
     enableAnimation() {
         this.#allowAnimation = true;
     }
 
+    /**
+     * @returns {void}
+     */
     disableAnimation() {
         this.#allowAnimation = false;
     }
@@ -282,6 +158,7 @@ class UISVGController {
 
     /**
      * @param {GameEvent} gameEvent 
+     * @returns {void}
      */
     #setMapSize(gameEvent) {
         if (this.#mapWidth === undefined || this.#mapHeight === undefined) {
@@ -293,7 +170,8 @@ class UISVGController {
     }
 
     /**
-     * @param {Array<Planet>} planets 
+     * @param {Array<Planet>} planets
+     * @return {void}
      */
     #renderPlanets(planets) {
         const planetPopups = [];
@@ -320,7 +198,7 @@ class UISVGController {
 
     /**
      * @param {Planet} planet 
-     * @returns {HTMLDivElement}
+     * @returns {SVGCircleElement}
      */
     #createPlanetElement(planet) {
         const planetElement = SVGFactory.createElement('circle');
@@ -345,29 +223,33 @@ class UISVGController {
 
     /**
      * @param {Planet} planet 
-     * @param {HTMLDivElement} planetDiv 
+     * @param {SVGCircleElement} planetElement 
      * @returns {void}
      */
-    #updatePlanetElement(planet, planetDiv) {
+    #updatePlanetElement(planet, planetElement) {
         const backgroundColor = UISVGController.#Colors[this.#playerDict[planet.owner]] ?? 'red';
         const renderedPosition = this.#calculateRenderedPosition(planet.pos.x, planet.pos.y);
 
-        planetDiv.style.fill = backgroundColor;
+        planetElement.style.fill = backgroundColor;
 
         if (planet.destroyed === true) {
-            planetDiv.style.fill = 'black';
+            planetElement.style.fill = 'black';
         }
 
         if (planet.owner !== this.#playerId && planet.spaceMissionPossible === false) {
-            planetDiv.style.fill = 'darkgrey';
+            planetElement.style.fill = 'darkgrey';
         }
 
-        SVGFactory.applyProperties(planetDiv, {
+        SVGFactory.applyProperties(planetElement, {
             cx: renderedPosition.x,
             cy: renderedPosition.y,
         });
     }
 
+    /**
+     * @param {Planet} planet 
+     * @returns {SVGGElement}
+     */
     #createPlanetPopup(planet) {
         const renderedPosition = this.#calculateRenderedPosition(planet.pos.x, planet.pos.y);
         const displayedName = planet.id;
@@ -384,6 +266,13 @@ class UISVGController {
         return element;
     }
 
+    /**
+     * @param {number} x 
+     * @param {number} y 
+     * @param {Array<string>} textContents 
+     * @param {string} id 
+     * @returns {SVGGElement}
+     */
     #createGenericPopup(x, y, textContents, id) {
         const textLength = textContents.reduce((acc, current) => Math.max(acc, current.length), 0);
 
@@ -419,6 +308,13 @@ class UISVGController {
         return group;
     }
 
+    /**
+     * @param {number} popupX 
+     * @param {number} popupY 
+     * @param {number} lineNumber 
+     * @param {string} text 
+     * @returns {SVGTextElement}
+     */
     #createPopupContentLineElement(popupX, popupY, lineNumber, text) {
         const infoText = SVGFactory.createElement('text', {
             x: popupX + UISVGController.#PopupPadding,
@@ -433,6 +329,11 @@ class UISVGController {
         return infoText;
     }
 
+    /**
+     * @param {Planet} planet 
+     * @param {SVGGElement} popupElement
+     * @returns {void}
+     */
     #updatePlanetPopupElement(planet, popupElement) {
         const renderedPosition = this.#calculateRenderedPosition(planet.pos.x, planet.pos.y);
 
@@ -444,6 +345,13 @@ class UISVGController {
         this.#updateGenericPopup(popupElement, rectX, rectY, [`${planet.id}`, ...infoList]);
     }
 
+    /**
+     * @param {SVGGElement} popupElement 
+     * @param {number} x 
+     * @param {number} y 
+     * @param {Array<string>} textContent 
+     * @param {Array<string>} colors 
+     */
     #updateGenericPopup(popupElement, x, y, textContent, colors = undefined) {
         const textLength = textContent.reduce((acc, current) => Math.max(acc, current.length), 0);
 
@@ -491,6 +399,10 @@ class UISVGController {
         }
     }
 
+    /**
+     * @param {Planet} planet 
+     * @returns {SVGTextElement}
+     */
     #createEffectCounter(planet) {
         const effectElement = SVGFactory.createElement('text', {
             'font-size': 12,
@@ -508,6 +420,10 @@ class UISVGController {
         return effectElement;
     }
 
+    /**
+     * @param {Planet} planet 
+     * @returns {SVGGElement}
+     */
     #createEffectPopup(planet) {
         const pos = this.#calculatePlanetEffectCounterPosition(planet);
         const xOffset = `${planet.effectsEmitted.length}`.length * 8;
@@ -523,6 +439,10 @@ class UISVGController {
         return element;
     }
 
+    /**
+     * @param {Planet} planet 
+     * @param {SVGGElement} popupElement 
+     */
     #updateEffectPopup(planet, popupElement) {
         const pos = this.#calculatePlanetEffectCounterPosition(planet);
         const xOffset = `${planet.effectsEmitted.length}`.length * 8;
@@ -534,6 +454,10 @@ class UISVGController {
         this.#updateGenericPopup(popupElement, pos.x + xOffset, pos.y, [title, ...contentLines], ['black', ...colors]);
     }
 
+    /**
+     * @param {Planet} planet 
+     * @returns {Array<{text: string, color: string}>}
+     */
     #createEffectPopupItems(planet) {
         return planet.effectsEmitted.map(effect => {
             return {
@@ -543,6 +467,11 @@ class UISVGController {
         });
     }
 
+    /**
+     * @param {Planet} planet 
+     * @param {SVGTextElement} effectCounterElement 
+     * @returns {void}
+     */
     #updatePlanetEffectCounter(planet, effectCounterElement) {
         const pos = this.#calculatePlanetEffectCounterPosition(planet);
 
@@ -559,6 +488,10 @@ class UISVGController {
         }
     }
 
+    /**
+     * @param {Planet} planet 
+     * @returns {Position}
+     */
     #calculatePlanetEffectCounterPosition(planet) {
         const renderedPlanetPosition = this.#calculateRenderedPosition(planet.pos.x, planet.pos.y);
 
@@ -567,6 +500,10 @@ class UISVGController {
             renderedPlanetPosition.y - UISVGController.#PlanetSize - 4);
     }
 
+    /**
+     * @param {Planet} planet 
+     * @returns {Array<string>}
+     */
     #createPlanetInfo(planet) {
         return [
             `pos: (${planet.pos.x}, ${planet.pos.y})`,
@@ -577,6 +514,10 @@ class UISVGController {
         ];
     }
 
+    /**
+     * @param {number} playerId
+     * @returns {string}
+     */
     #getPlayerColor(playerId) {
         return UISVGController.#Colors[this.#playerDict[playerId]];
     }
@@ -587,16 +528,17 @@ class UISVGController {
      * @param {number} sizeToOffset
      * @returns {Position}
      */
-    #calculateRenderedPosition(x, y, sizeToOffset = 0) {
+    #calculateRenderedPosition(x, y) {
         const widthRatio = this.#containerWidth / this.#mapWidth;
         const heightRatio = this.#containerHeight / this.#mapHeight;
 
-        const renderedPosition = new Position(Math.round(x * widthRatio), Math.round(y * heightRatio));
-        const offset = Math.floor(sizeToOffset / 2);
-
-        return renderedPosition.translate(-offset);
+        return new Position(Math.round(x * widthRatio), Math.round(y * heightRatio));
     }
 
+    /**
+     * @param {Array<Wormhole>} wormholes 
+     * @returns {void}
+     */
     #renderWormholes(wormholes) {
         for (const wormhole of wormholes) {
             if (!this.#wormholeElements.has(wormhole.id)) {
@@ -622,6 +564,14 @@ class UISVGController {
         }
     }
 
+    /**
+     * @param {number} x 
+     * @param {number} y 
+     * @param {number} len 
+     * @param {number} angleRad 
+     * @param {string} color 
+     * @returns {void}
+     */
     #drawLine(x, y, len, angleRad, color) {
         // angleRad contains the direction of the gravity wave so by defaut it points away from it's source
         // however for us it is better if the line drawn for it points towards the source, so we reverse the angle to point in the opposite direction
@@ -652,6 +602,9 @@ class UISVGController {
         this.#svgContainer.appendChild(line);
     }
 
+    /**
+     * @returns {void}
+     */
     #animate() {
         if (!this.#allowAnimation) {
             return;
@@ -668,3 +621,23 @@ class UISVGController {
         });
     }
 }
+
+/**
+ * @param {string} elementId
+ * @returns {void}
+ */
+export const show = (elementId) => {
+    SVGFactory.applyProperties(document.getElementById(elementId), {
+        visibility: undefined
+    });
+};
+
+/**
+ * @param {string} elementId 
+ * @returns {void}
+ */
+export const hide = (elementId) => {
+    SVGFactory.applyProperties(document.getElementById(elementId), {
+        visibility: 'hidden'
+    });
+};

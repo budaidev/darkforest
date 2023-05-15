@@ -1,4 +1,4 @@
-class WebSocketManager {
+export default class WebSocketManager {
     static #PlanetsUrl = 'ws://localhost:8080/planets';
     static #ReconnectIntervalMs = 1000;
 
