@@ -6,9 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffectType;
 import com.loxon.javachallenge.challenge.game.event.actioneffect.GravityWaveCrossing;
+import com.loxon.javachallenge.challenge.game.model.Game;
 import com.loxon.javachallenge.challenge.game.model.GravityWaveCause;
 import com.loxon.javachallenge.challenge.game.model.Planet;
 import com.loxon.javachallenge.challenge.game.model.Player;
+import com.loxon.javachallenge.challenge.game.model.World;
 import com.loxon.javachallenge.challenge.game.settings.GameSettings;
 import com.pm.mentor.darkforest.util.Point;
 import com.pm.mentor.darkforest.util.Vector;
@@ -33,7 +35,12 @@ public class GravityWaveCollectorTest {
     public void setup() {
 
         settings = initSettings();
-        gameState = new GameState(settings, 1);
+        val game = new Game();
+        game.setSettings(settings);
+        val world = new World();
+        world.setPlanets(List.of());
+        game.setWorld(world);
+        gameState = new GameState(game, 57, null);
 
     }
 

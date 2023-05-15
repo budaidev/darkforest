@@ -1,7 +1,5 @@
 package com.pm.mentor.darkforest.ai.model;
 
-import com.loxon.javachallenge.challenge.game.model.Player;
-import com.pm.mentor.darkforest.util.PointToPointDistanceCache;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -23,6 +21,7 @@ import com.loxon.javachallenge.challenge.game.model.Planet;
 import com.loxon.javachallenge.challenge.game.model.WormHole;
 import com.loxon.javachallenge.challenge.game.settings.GameSettings;
 import com.pm.mentor.darkforest.ai.GameActionApi;
+import com.pm.mentor.darkforest.util.PointToPointDistanceCache;
 
 import lombok.Getter;
 import lombok.Synchronized;
@@ -45,8 +44,6 @@ public class GameState {
 	private final GravityWaveCollector actionEffectCollector;
 
 	List<WormHole> wormHoles = new ArrayList<>();
-
-	PointToPointDistanceCache distanceCache;
 	
 	public GameState(Game game, int playerId, GameActionApi gameActionApi) {
 		this.playerId = playerId;
@@ -58,16 +55,6 @@ public class GameState {
 		actionApi = gameActionApi;
 		
 		actionEffectCollector = new GravityWaveCollector(game.getPlayers(), planets, playerId, this);
-		distanceCache = new PointToPointDistanceCache();
-	}
-
-	public GameState(GameSettings settings, int playerId) {
-		this.settings = settings;
-		this.playerId = playerId;
-		this.planets = new ArrayList<>();
-		this.actionApi = null;
-		actionEffectCollector = new GravityWaveCollector(List.of(new Player()), planets, playerId, this);
-		distanceCache = new PointToPointDistanceCache();
 	}
 	
 	public int getMaxConcurrentActionCount() {
@@ -133,12 +120,12 @@ public class GameState {
 
 	@Synchronized
 	private DistanceToPlayerPlanetCalculator getDistanceCalculator(){
-		return new DistanceToPlayerPlanetCalculator(getPlayerPlanets(), distanceCache);
+		return new DistanceToPlayerPlanetCalculator(getPlayerPlanets());
 	}
 
 	@Synchronized
 	private DistanceToPlayerPlanetCalculator getDistanceCalculatorWithWormholes(){
-		return new DistanceToPlayerPlanetCalculator(getPlayerPlanets(), getWormHoles(),distanceCache);
+		return new DistanceToPlayerPlanetCalculator(getPlayerPlanets(), getWormHoles());
 	}
 	
 	@Synchronized
