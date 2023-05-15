@@ -106,8 +106,8 @@ public class SampleAI implements AI {
 		missileShower(closestEnemyPlanets);
 		 */
 
-		missionAndMissileTactic(playerPlanets, avaibleActionNumber);
-		//passiveShieldTactic(playerPlanets, avaibleActionNumber);
+		//missionAndMissileTactic(playerPlanets, avaibleActionNumber);
+		passiveShieldTactic(playerPlanets, avaibleActionNumber);
 		if(gameState.hasFreeAction()){
 			log.info("We did not use all the actions!");
 		}
@@ -121,12 +121,8 @@ public class SampleAI implements AI {
 				.map(e -> new PlanetDistance(e.getKey(), e.getValue()))
 				.filter(gameState.createTargetedPlanetDistanceFilter()).limit(avaibleActionNumber).toList();
 
-
-
-
-
-		if (!colonizablePlanets.isEmpty() && playerPlanets.size() < 20){
-			int actionNumber = 0;
+		int actionNumber = 0;
+		if (!colonizablePlanets.isEmpty() && colonizablePlanets.get(0).getDistance() < 30){
 			while (actionNumber < avaibleActionNumber) {
 				spaceMissionToTarget(playerPlanets, colonizablePlanets.get(actionNumber).getPlanet());
 				actionNumber++;
@@ -137,13 +133,30 @@ public class SampleAI implements AI {
 					.filter(p -> !p.hasShield())
 					.collect(Collectors.toList());
 			Collections.shuffle(planetsWithoutShield);
-			int actionNumber = 0;
-			while (actionNumber < avaibleActionNumber) {
+			while (actionNumber < avaibleActionNumber && actionNumber < planetsWithoutShield.size()) {
 				gameState.erectShield(planetsWithoutShield.get(actionNumber).getId());
 				actionNumber++;
 			}
 
 		}
+
+		// if we have remaining action we should just stay
+		if(actionNumber < avaibleActionNumber) {
+			Map<AIPlanet, Double> enemyPlanetMap = gameState.getEnemyPlanet();
+			List<PlanetDistance> enemyPlanets = enemyPlanetMap.entrySet().stream()
+					.sorted(Map.Entry.comparingByValue())
+					.map(e -> new PlanetDistance(e.getKey(), e.getValue()))
+					.filter(x -> !x.getPlanet().isAlreadyShot())
+					.filter(gameState.createTargetedPlanetDistanceFilter())
+					.limit(avaibleActionNumber)
+					.toList();
+			for (PlanetDistance dist : enemyPlanets) {
+				shootFromClosestPlanet(playerPlanets, dist.getPlanet());
+				actionNumber++;
+			}
+		}
+
+
 
 
 	}
@@ -222,12 +235,35 @@ public class SampleAI implements AI {
 		if(wormholeNumber < 1) {
 			log.trace("buildWormhole from " + startPlanet.getId() + " to center");
 
-			//int x_center = gameState.getSettings().getWidth() / 2;
-			//int y_center = gameState.getSettings().getHeight() / 2;
-			int x_center = gameState.getSettings().getWidth() - startPlanet.getPos().getX();
-			int y_center = gameState.getSettings().getHeight() - startPlanet.getPos().getY();
+			int w = gameState.getSettings().getWidth();
+			int h = gameState.getSettings().getHeight();
 
-			gameState.buildWormHole(startPlanet.getPos().getX(), startPlanet.getPos().getY(), x_center, y_center);
+			//four corner point
+			Point upLeft = new Point(w/4, h/4);
+			Point upRight = new Point(w/2 + w/4 , h/4);
+			Point downLeft = new Point(w/2, h/2 + h/4);
+			Point downRight = new Point(w/2 + w/4, h/2 + h/4);
+
+
+
+			double maxDistance = startPlanet.getPos().distance(upLeft);
+			Point maxPoint = upLeft;
+			for(Point p : List.of(upRight, downLeft, downRight)) {
+				double distance = startPlanet.getPos().distance(p);
+				if(distance > maxDistance) {
+					maxDistance = distance;
+					maxPoint = p;
+				}
+			}
+
+			if(maxPoint == upRight || maxPoint == downLeft) {
+				gameState.buildWormHole(downRight.getX(), downRight.getY(), upLeft.getX(), upLeft.getY());
+			} else {
+				gameState.buildWormHole(downLeft.getX(), downLeft.getY(), upRight.getX(), upRight.getY());
+			}
+
+
+			gameState.buildWormHole(startPlanet.getPos().getX(), startPlanet.getPos().getY(), maxPoint.getX(), maxPoint.getY());
 
 			wormholeNumber++;
 		}
@@ -242,7 +278,7 @@ public class SampleAI implements AI {
 			val targetPlanets = closestUnknownPlanets.stream()
 					.filter(gameState.createTargetedPlanetFilter())
 					.limit(gameState.availableActionCount())
-					.collect(Collectors.toList());
+					.toList();
 
 			log.trace(String.format("Selected %d planets as mission targets", targetPlanets.size()));
 
@@ -266,8 +302,21 @@ public class SampleAI implements AI {
 			}
 		} else {
 
-			//TODO: get closest wormhole to planet
-			WormHole closestWormhole = gameState.getWormHoles().get(0);
+			double minDistance = Double.MAX_VALUE;
+			WormHole closestWormhole = null;
+			for(WormHole wormHole : gameState.getWormHoles()){
+				double distanceA = wormHole.getPointA().distance(target.getPos());
+				double distanceB = wormHole.getPointB().distance(target.getPos());
+				if(distanceA < minDistance){
+					minDistance = distanceA;
+					closestWormhole = wormHole;
+				}
+				if(distanceB < minDistance){
+					minDistance = distanceB;
+					closestWormhole = wormHole;
+				}
+
+			}
 
 			val closestPlayerPlanet = playerPlanets.stream().min(new ClosestToGivenPlanetWithWormholeComparator(target, closestWormhole));
 
@@ -284,11 +333,11 @@ public class SampleAI implements AI {
 
 		double distanceFromAPoint =
 				PointToPointDistanceCache.distance(from.getPos(), new Point(w.getX(), w.getY())) +
-					PointToPointDistanceCache.distance(to.getPos(), new Point(w.getXb(), w.getYb()));
+						PointToPointDistanceCache.distance(to.getPos(), new Point(w.getXb(), w.getYb()));
 
 		double distanceFromBPoint =
 				PointToPointDistanceCache.distance(from.getPos(), new Point(w.getXb(), w.getYb())) +
-					PointToPointDistanceCache.distance(to.getPos(), new Point(w.getX(), w.getY()));
+						PointToPointDistanceCache.distance(to.getPos(), new Point(w.getX(), w.getY()));
 
 		double minDistance = List.of(distanceWithoutWormhole, distanceFromAPoint, distanceFromBPoint)
 				.stream()

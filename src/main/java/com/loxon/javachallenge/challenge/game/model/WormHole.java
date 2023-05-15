@@ -1,5 +1,6 @@
 package com.loxon.javachallenge.challenge.game.model;
 
+import com.pm.mentor.darkforest.util.Point;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,5 +34,13 @@ public class WormHole extends MapObject {
 		double px = mapObject.getX() - xb;
 		double py = mapObject.getY() - yb;
 		return Math.sqrt(px * px + py * py);
+	}
+
+	public Point getPointA(){
+		return new Point(getX(), getY());
+	}
+
+	public Point getPointB(){
+		return new Point(getXb(), getYb());
 	}
 }
