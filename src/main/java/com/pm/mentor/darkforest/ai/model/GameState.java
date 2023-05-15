@@ -369,4 +369,9 @@ public class GameState {
 			.filter(action -> action.getActionEndTime() + safetyThreshold <= timestamp)
 			.collect(Collectors.toList());
 	}
+
+	public void shieldTimeout(int affectedMapObjectId) {
+		tryFindPlayerPlanet(affectedMapObjectId)
+			.ifPresent(AIPlanet::disableShield);
+	}
 }

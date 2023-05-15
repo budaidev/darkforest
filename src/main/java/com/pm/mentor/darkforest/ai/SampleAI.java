@@ -8,6 +8,7 @@ import com.pm.mentor.darkforest.ai.model.PlanetDistance;
 import com.pm.mentor.darkforest.util.Point;
 import com.pm.mentor.darkforest.util.PointToPointDistanceCache;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -31,6 +32,8 @@ public class SampleAI implements AI {
 	@Getter
 	private boolean running = false;
 
+	private long currentTime;
+
 	@Override
 	public void init(GameState gameState) {
 		log.info("AI initialized");
@@ -47,6 +50,7 @@ public class SampleAI implements AI {
 	@Override
 	public void receiveEvent(GameEvent event) {
 		log.trace(String.format("AI received a game event: %s", event.getEventType()));
+		currentTime = event.getEventTime();
 
 		doStuff();
 	}
@@ -103,8 +107,42 @@ public class SampleAI implements AI {
 		 */
 
 		missionAndMissileTactic(playerPlanets, avaibleActionNumber);
+		//passiveShieldTactic(playerPlanets, avaibleActionNumber);
 		if(gameState.hasFreeAction()){
 			log.info("We did not use all the actions!");
+		}
+	}
+
+	private void passiveShieldTactic(List<AIPlanet> playerPlanets, int avaibleActionNumber) {
+		Map<AIPlanet, Double> colonizablePlanetsMap = gameState.getColonizablePlanets();
+
+		List<PlanetDistance> colonizablePlanets = colonizablePlanetsMap.entrySet().stream()
+				.sorted(Map.Entry.comparingByValue())
+				.map(e -> new PlanetDistance(e.getKey(), e.getValue()))
+				.filter(gameState.createTargetedPlanetDistanceFilter()).limit(avaibleActionNumber).toList();
+
+
+
+
+
+		if (!colonizablePlanets.isEmpty() && playerPlanets.size() < 20){
+			int actionNumber = 0;
+			while (actionNumber < avaibleActionNumber) {
+				spaceMissionToTarget(playerPlanets, colonizablePlanets.get(actionNumber).getPlanet());
+				actionNumber++;
+			}
+		} else {
+			val planetsWithoutShield = playerPlanets.stream()
+					.filter(gameState.createTargetedPlanetFilter())
+					.filter(p -> !p.hasShield())
+					.collect(Collectors.toList());
+			Collections.shuffle(planetsWithoutShield);
+			int actionNumber = 0;
+			while (actionNumber < avaibleActionNumber) {
+				gameState.erectShield(planetsWithoutShield.get(actionNumber).getId());
+				actionNumber++;
+			}
+
 		}
 
 
