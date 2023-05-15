@@ -48,7 +48,7 @@ public class PointToPointDistanceCacheTests {
 		val result3 = cache.distance(P3, P2);
 		assertEquals(P3.distance(P2), result3);
 	}
-	
+
 	@Disabled
 	@Test
 	public void collisionDetection() {
@@ -60,6 +60,9 @@ public class PointToPointDistanceCacheTests {
 						val P2 = new Point(x2, y2);
 						val result = cache.distance(P1, P2);
 						assertEquals(P1.distance(P2), result);
+						
+						val result2 = cache.distance(P1, P2);
+						assertEquals(result, result2);
 					}
 				}
 			}

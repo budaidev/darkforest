@@ -17,6 +17,7 @@ import com.loxon.javachallenge.challenge.game.settings.GameSettings;
 import com.pm.mentor.darkforest.util.Angle;
 import com.pm.mentor.darkforest.util.MathUtil;
 import com.pm.mentor.darkforest.util.Point;
+import com.pm.mentor.darkforest.util.PointToPointDistanceCache;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +59,7 @@ public class GravityWaveCollector {
     }
 
     private double distanceBetween(AIPlanet a, AIPlanet b) {
-        return a.getPos().distance(b.getPos());
+        return PointToPointDistanceCache.distance(a.getPos(), b.getPos());
     }
 
     private AIPlanet findPlanet(int id) {

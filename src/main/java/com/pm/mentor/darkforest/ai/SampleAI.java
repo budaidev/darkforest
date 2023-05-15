@@ -6,6 +6,8 @@ import com.pm.mentor.darkforest.ai.model.AIPlanet;
 import com.pm.mentor.darkforest.ai.model.ClosestToGivenPlanetWithWormholeComparator;
 import com.pm.mentor.darkforest.ai.model.PlanetDistance;
 import com.pm.mentor.darkforest.util.Point;
+import com.pm.mentor.darkforest.util.PointToPointDistanceCache;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -236,15 +238,15 @@ public class SampleAI implements AI {
 	}
 
 	public void spaceMission(AIPlanet from, AIPlanet to, WormHole w) {
-		double distanceWithoutWormhole = from.getPos().distance(to.getPos());
+		double distanceWithoutWormhole = PointToPointDistanceCache.distance(from.getPos(), to.getPos());
 
 		double distanceFromAPoint =
-				from.getPos().distance(new Point(w.getX(), w.getY())) +
-						to.getPos().distance(new Point(w.getXb(), w.getYb()));
+				PointToPointDistanceCache.distance(from.getPos(), new Point(w.getX(), w.getY())) +
+					PointToPointDistanceCache.distance(to.getPos(), new Point(w.getXb(), w.getYb()));
 
 		double distanceFromBPoint =
-				from.getPos().distance(new Point(w.getXb(), w.getYb())) +
-						to.getPos().distance(new Point(w.getX(), w.getY()));
+				PointToPointDistanceCache.distance(from.getPos(), new Point(w.getXb(), w.getYb())) +
+					PointToPointDistanceCache.distance(to.getPos(), new Point(w.getX(), w.getY()));
 
 		double minDistance = List.of(distanceWithoutWormhole, distanceFromAPoint, distanceFromBPoint)
 				.stream()

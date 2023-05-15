@@ -4,11 +4,15 @@ import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffect;
 import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffectType;
 import com.loxon.javachallenge.challenge.game.model.Planet;
 import com.pm.mentor.darkforest.util.Point;
+import com.pm.mentor.darkforest.util.PointToPointDistanceCache;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @ToString
@@ -112,15 +116,14 @@ public class AIPlanet {
                         break;
                     }
                 }
-
             }
-
         }
-
-
     }
 
     private long getActionTime(GameState state, ActionEffect action) {
-        return (long) (state.tryFindPlayerPlanet(action.getAffectedMapObjectId()).get().pos.distance(this.pos) * state.getSettings().getTimeOfOneLightYear());
+    	val playerPlanet = state.tryFindPlayerPlanet(action.getAffectedMapObjectId()).get();
+    	val distanceToAffected = PointToPointDistanceCache.distance(playerPlanet.pos, this.pos);
+    	
+        return (long) (distanceToAffected * state.getSettings().getTimeOfOneLightYear());
     }
 }

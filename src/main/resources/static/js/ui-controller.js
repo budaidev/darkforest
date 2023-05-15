@@ -367,18 +367,18 @@ export default class UISVGController {
 
         const existingLineCount = popupElement.children.length - 2;
 
-        for (let i = 1; i < existingLineCount; i++) {
-            const infoText = popupElement.children[1 + i];
+        for (let i = 0; i < existingLineCount; i++) {
+            const infoText = popupElement.children[2 + i];
 
             SVGFactory.applyProperties(infoText, {
                 x: x + UISVGController.#PopupPadding,
-                y: y + (i+1) * UISVGController.#PopupFontSize + UISVGController.#PopupPadding,
+                y: y + (i+2) * UISVGController.#PopupFontSize + UISVGController.#PopupPadding,
             });
 
-            infoText.textContent = textContent[i];
+            infoText.textContent = textContent[i+1];
 
             const color = colors !== undefined 
-                ? colors[i]
+                ? colors[i + 1]
                 : undefined;
 
             infoText.style.fill = color ?? 'black';

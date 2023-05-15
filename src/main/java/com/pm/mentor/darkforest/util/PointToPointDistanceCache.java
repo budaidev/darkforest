@@ -12,9 +12,9 @@ public class PointToPointDistanceCache {
 	private static final int MaskX2 = 0x0000FF00;
 	private static final int MaskY2 = 0x000000FF;
 	
-	private Map<Integer, Double> cache = new HashMap<>();
+	private static Map<Integer, Double> cache = new HashMap<>();
 	
-	public double distance(Point a, Point b) {
+	public static double distance(Point a, Point b) {
 		val key = calculateKey(a.getX(), a.getY(), b.getX(), b.getY());
 		
 		if (!cache.containsKey(key)) {
@@ -24,7 +24,13 @@ public class PointToPointDistanceCache {
 		return cache.get(key);
 	}
 	
-	private int calculateKey(int x1, int y1, int x2, int y2 ) {
+	public static double distance(Point p1, long x2, long y2) {
+		val p2 = new Point(x2, y2);
+		
+		return distance(p1, p2);
+	}
+	
+	private static int calculateKey(int x1, int y1, int x2, int y2 ) {
 		return (x1 << 24 & MaskX1) | (y1 << 16 & MaskY1) | (x2 << 8 & MaskX2) | (y2 & MaskY2) ;
 	}
 }
