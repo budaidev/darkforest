@@ -6,9 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffectType;
 import com.loxon.javachallenge.challenge.game.event.actioneffect.GravityWaveCrossing;
+import com.loxon.javachallenge.challenge.game.model.Game;
 import com.loxon.javachallenge.challenge.game.model.GravityWaveCause;
 import com.loxon.javachallenge.challenge.game.model.Planet;
 import com.loxon.javachallenge.challenge.game.model.Player;
+import com.loxon.javachallenge.challenge.game.model.World;
 import com.loxon.javachallenge.challenge.game.settings.GameSettings;
 import com.pm.mentor.darkforest.util.Point;
 import com.pm.mentor.darkforest.util.Vector;
@@ -33,7 +35,12 @@ public class GravityWaveCollectorTest {
     public void setup() {
 
         settings = initSettings();
-        gameState = new GameState(settings, 1);
+        val game = new Game();
+        game.setSettings(settings);
+        val world = new World();
+        world.setPlanets(List.of());
+        game.setWorld(world);
+        gameState = new GameState(game, 57, null);
 
     }
 
@@ -152,6 +159,62 @@ public class GravityWaveCollectorTest {
     	assertFalse(res1.isSuccessful());
     	assertTrue(res2.isSuccessful());
     	assertEquals(2273, res2.getPossibleSource().getId());
+    }
+    
+    @Test
+    public void sourcePlusTwoObservations2_ShouldSucceed() {
+    	// source planet: 
+    	// 50231, pos=(78, 17), emitted at: 1684176405134
+    	
+    	// observers
+    	// 50227, pos(79, 12), observed at: 1684176405541 angle: 0.019701476948111335
+    	// 50268, pos(88, 17), observed at: 1684176405934 angle: 1.5372053955231917
+    	
+    	val sourcePlanet = createPlanet(50231, new Point(78, 17));
+    	val observer1 = createPlanet(50227, new Point(78, 12));
+    	val observer2 = createPlanet(50268, new Point(88, 17));
+    	
+    	List<AIPlanet> planets = new ArrayList<>();
+    	planets.add(sourcePlanet);
+    	planets.add(observer1);
+    	planets.add(observer2);
+
+    	gravityWaveCollector = new GravityWaveCollector(initPlayers(), planets, 57, gameState);
+    	
+    	val res1 = gravityWaveCollector.collect(createSpaceMissionPassingEffect(1684176405541L, 0.019701476948111335, 50227));
+    	val res2 = gravityWaveCollector.collect(createSpaceMissionPassingEffect(1684176405934L, 1.5372053955231917, 50268));
+    	
+    	assertFalse(res1.isSuccessful());
+    	assertTrue(res2.isSuccessful());
+    	assertEquals(50231, res2.getPossibleSource().getId());
+    }
+    
+    @Test
+    public void sourcePlusTwoObservations3_ShouldSucceed() {
+    	// source planet: 
+    	// 69077, pos=(105, 9), emitted at: 1684180220804
+    	
+    	// observers
+    	// 69080, pos(105, 17), observed at: 1684180221444 angle: 3.0728263891480956
+    	// 69035, pos(96, 6), observed at: 1684180221562 angle: 5.114998205541819
+    	
+    	val sourcePlanet = createPlanet(69077, new Point(105, 9));
+    	val observer1 = createPlanet(69080, new Point(105, 17));
+    	val observer2 = createPlanet(69035, new Point(96, 6));
+    	
+    	List<AIPlanet> planets = new ArrayList<>();
+    	planets.add(sourcePlanet);
+    	planets.add(observer1);
+    	planets.add(observer2);
+
+    	gravityWaveCollector = new GravityWaveCollector(initPlayers(), planets, 57, gameState);
+    	
+    	val res1 = gravityWaveCollector.collect(createSpaceMissionPassingEffect(1684180221444L, 3.0728263891480956, 69080));
+    	val res2 = gravityWaveCollector.collect(createSpaceMissionPassingEffect(1684180221562L, 5.114998205541819, 69035));
+    	
+    	assertFalse(res1.isSuccessful());
+    	assertTrue(res2.isSuccessful());
+    	assertEquals(69077, res2.getPossibleSource().getId());
     }
     
     private AIPlanet createPlanet(int id, int x, int y) {

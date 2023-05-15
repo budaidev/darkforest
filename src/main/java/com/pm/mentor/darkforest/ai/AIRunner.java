@@ -1,5 +1,7 @@
 package com.pm.mentor.darkforest.ai;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import com.loxon.javachallenge.challenge.game.event.GameEvent;
@@ -20,32 +22,42 @@ public class AIRunner implements Runnable {
 
 	@Override
 	public void run() {
-		val timeStarted = System.currentTimeMillis();
-		
-		var needHeartBeat = shouldSendHeartBeat();
-		lastExecution = System.currentTimeMillis();
-		
-		while (!commandQueue.isEmpty()) {
-			needHeartBeat = false;
-			aiImplementation.receiveEvent(commandQueue.poll());
-		}
-		
-		if (needHeartBeat) {
-			aiImplementation.heartBeat();
-		}
-		
-		if (aiImplementation.isRunning()) {
-			val elapsed = System.currentTimeMillis() - timeStarted;
+		try {
+			val timeStarted = System.currentTimeMillis();
 			
-			if (elapsed > longestAiExecution) {
-				longestAiExecution = elapsed;
+			var needHeartBeat = shouldSendHeartBeat();
+			lastExecution = System.currentTimeMillis();
+			
+			while (!commandQueue.isEmpty()) {
+				needHeartBeat = false;
+				aiImplementation.receiveEvent(commandQueue.poll());
 			}
 			
-			if (elapsed > 20) {
-				log.warn(String.format("AI logic execution took: %d ms", elapsed));
-			} else {
-				log.trace(String.format("AI logic execution took: %d ms", elapsed));
+			if (needHeartBeat) {
+				aiImplementation.heartBeat();
 			}
+			
+			if (aiImplementation.isRunning()) {
+				val elapsed = System.currentTimeMillis() - timeStarted;
+				
+				if (elapsed > longestAiExecution) {
+					longestAiExecution = elapsed;
+				}
+				
+				if (elapsed > 20) {
+					log.warn(String.format("AI logic execution took: %d ms", elapsed));
+				} else {
+					log.trace(String.format("AI logic execution took: %d ms", elapsed));
+				}
+			}
+		} catch (Exception e) {
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+
+			e.printStackTrace(pw);
+			String sStackTrace = sw.toString();
+
+			log.error(sStackTrace);
 		}
 	}
 

@@ -12,18 +12,15 @@ public class DistanceToPlayerPlanetCalculator {
 
 	private final List<AIPlanet> playerPlanets;
 	private final List<WormHole> wormholes;
-	private final PointToPointDistanceCache distanceCache;
 
-	public DistanceToPlayerPlanetCalculator(List<AIPlanet> playerPlanets, PointToPointDistanceCache distanceCache) {
+	public DistanceToPlayerPlanetCalculator(List<AIPlanet> playerPlanets) {
 		this.playerPlanets = new ArrayList<>(playerPlanets);
 		this.wormholes = new ArrayList<>();
-		this.distanceCache = distanceCache;
 	}
 
-	public DistanceToPlayerPlanetCalculator(List<AIPlanet> playerPlanets, List<WormHole> wormholes, PointToPointDistanceCache distanceCache) {
+	public DistanceToPlayerPlanetCalculator(List<AIPlanet> playerPlanets, List<WormHole> wormholes) {
 		this.playerPlanets = new ArrayList<>(playerPlanets);
 		this.wormholes = wormholes;
-		this.distanceCache = distanceCache;
 		setVirtualPlanets();
 	}
 
@@ -40,7 +37,7 @@ public class DistanceToPlayerPlanetCalculator {
 		Map<AIPlanet, Double> distances = new HashMap<>();
 		for (AIPlanet planet : planets) {
 			playerPlanets.stream().mapToDouble(
-					p -> distanceCache.distance(p.getPos(), planet.getPos())
+					p -> PointToPointDistanceCache.distance(p.getPos(), planet.getPos())
 			).min().ifPresent(minDistance ->
 					distances.put(planet, minDistance)
 			);

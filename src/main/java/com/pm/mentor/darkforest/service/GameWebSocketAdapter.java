@@ -5,6 +5,9 @@ import com.loxon.javachallenge.challenge.game.model.Game;
 import com.loxon.javachallenge.challenge.game.model.Planet;
 import com.loxon.javachallenge.challenge.game.model.World;
 import com.pm.mentor.darkforest.ui.GameDtoMapper;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -91,16 +94,25 @@ public class GameWebSocketAdapter implements WebSocketHandler, GameActionApi {
 
 	@Override
 	public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) {
+		try {
+			String payload = (String)message.getPayload();
+	
+			log.trace(payload);
+	
+			GameEvent gameEvent = serializationService.readGameEvent(payload);
+	
+			gameStateHolder.setMyObject(GameDtoMapper.toGameDto(gameEvent));
+	
+			aiContainer.receiveGameEvent(gameEvent);
+		} catch (Exception e) {
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
 
-		String payload = (String)message.getPayload();
+			e.printStackTrace(pw);
+			String sStackTrace = sw.toString();
 
-		log.trace(payload);
-
-		GameEvent gameEvent = serializationService.readGameEvent(payload);
-
-		gameStateHolder.setMyObject(GameDtoMapper.toGameDto(gameEvent));
-
-		aiContainer.receiveGameEvent(gameEvent);
+			log.error(sStackTrace);
+		}
 	}
 
 	@Override

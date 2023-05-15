@@ -44,8 +44,4 @@ public class Point {
     public double distance(Point other) {
         return Math.sqrt(Math.pow(this.getX() - other.getX(), 2) + Math.pow(this.getY() - other.getY(), 2));
     }
-
-    public double distance(long x, long y) {
-        return Math.sqrt(Math.pow(this.getX() - x, 2) + Math.pow(this.getY() - y, 2));
-    }
 }
