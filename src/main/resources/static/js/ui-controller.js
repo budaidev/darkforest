@@ -7,11 +7,11 @@ class GameEvent {
      * @param {Array<Wormhole>} wormholes
      * @param {string} eventType
      */
-    constructor(width, height, planets, wormholes, eventType) {
+    constructor(width, height, planets, wormHoles, eventType) {
         this.width = width;
         this.height = height;
         this.planets = planets;
-        this.wormholes = wormholes;
+        this.wormHoles = wormHoles;
         this.eventType = eventType;
     }
 }
@@ -178,6 +178,7 @@ class UISVGController {
     #waveElements;
     #effectCounterElements;
     #effectPopupElements;
+    #wormholeElements;
 
     #allowAnimation = true;
 
@@ -245,8 +246,8 @@ class UISVGController {
             this.#renderPlanets(gameEvent.planets);
         }
 
-        if(gameEvent.wormholes && gameEvent.wormholes.length > 0) {
-            this.#renderWormholes(gameEvent.wormholes);
+        if(gameEvent.wormHoles && gameEvent.wormHoles.length > 0) {
+            this.#renderWormholes(gameEvent.wormHoles);
         }
     }
 
@@ -266,6 +267,7 @@ class UISVGController {
         this.#svgContainer = SVGFactory.createViewBox(this.#containerWidth, this.#containerHeight);
         this.#container.appendChild(this.#svgContainer);
 
+        this.#wormholeElements = new Map();
         this.#planetElements = new Map();
         this.#planetPopupElements = new Map();
         this.#waveElements = [];
@@ -535,17 +537,26 @@ class UISVGController {
 
     #renderWormholes(wormholes) {
         for (const wormhole of wormholes) {
+            if (!this.#wormholeElements.has(wormhole.id)) {
 
-            const line = SVGFactory.createElement('line', {
-                x1: wormhole.x1,
-                y1: wormhole.y1,
-                x2: wormhole.x2,
-                y2: wormhole.y2,
-                stroke: color ?? 'black'
-            });
+                const startPos = this.#calculateRenderedPosition(wormhole.x, wormhole.y);
+                const endPos = this.#calculateRenderedPosition(wormhole.xb, wormhole.yb);
 
-            // Add the line to the DOM
-            this.#svgContainer.appendChild(line);
+                const line = SVGFactory.createElement('line', {
+                    id: wormhole.id,
+                    class: 'wormhole',
+                    x1: startPos.x,
+                    y1: startPos.y,
+                    x2: endPos.x,
+                    y2: endPos.y,
+                    stroke: 'purple'
+                });
+
+                // Add the line to the DOM
+                this.#svgContainer.appendChild(line);
+
+                this.#wormholeElements.set(wormhole.id, line);
+            }
         }
     }
 
