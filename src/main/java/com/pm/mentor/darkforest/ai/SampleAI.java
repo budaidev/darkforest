@@ -73,7 +73,9 @@ public class SampleAI implements AI {
 
 	private void doStuff() {
 		if (!running) {
-			gameState.clearActions();
+			if (gameState != null) {
+				gameState.clearActions();
+			}
 
 			return;
 		}
