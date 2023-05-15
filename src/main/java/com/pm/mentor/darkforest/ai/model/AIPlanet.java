@@ -1,5 +1,6 @@
 package com.pm.mentor.darkforest.ai.model;
 
+import com.loxon.javachallenge.challenge.game.event.actioneffect.ActionEffectType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,17 +14,17 @@ import lombok.ToString;
 
 @ToString
 public class AIPlanet {
-	
+
 	@Getter
 	private final int id;
 	@Getter
 	private final Point pos;
-	
+
 	@Getter
 	private int owner;
 	@Getter
 	private boolean destroyed;
-	
+
 	private boolean visitedBySpaceMission;
 
 	@Getter
@@ -35,10 +36,10 @@ public class AIPlanet {
 	@Getter
 	@Setter
 	private double distanceToClosest = 0; // used for wormhole comparison
-	
+
 	@Getter
 	private final List<ActionEffect> effectsEmitted;
-	
+
 	public AIPlanet(Planet p) {
 		id = p.getId();
 		pos = new Point(p.getX(), p.getY());
@@ -64,16 +65,16 @@ public class AIPlanet {
 	public boolean isSpaceMissionPossible() {
 		return !destroyed && !visitedBySpaceMission;
 	}
-	
+
 	public void playerSettled(int playerId) {
 		owner = playerId;
 		visitedBySpaceMission = true;
 	}
-	
+
 	public void destoryed() {
 		this.destroyed = true;
 	}
-	
+
 	public void spaceMissionFailed() {
 		visitedBySpaceMission = true;
 	}
@@ -81,8 +82,14 @@ public class AIPlanet {
 	public void shoot() {
 		alreadyShot = true;
 	}
-	
+
 	public void blameEffect(ActionEffect effect) {
+		if(effect.getEffectChain().stream()
+				.anyMatch(x -> x.equals(ActionEffectType.SPACE_MISSION_GRAWITY_WAVE_PASSING))) {
+			visitedBySpaceMission = true;
+			owner = effect.getInflictingPlayer();
+		}
+
 		effectsEmitted.add(effect);
 	}
 }

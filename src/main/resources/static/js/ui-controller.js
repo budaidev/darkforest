@@ -236,7 +236,7 @@ export default class UISVGController {
             planetElement.style.fill = 'black';
         }
 
-        if (planet.owner !== this.#playerId && planet.spaceMissionPossible === false) {
+        if (planet.owner === 0 && planet.spaceMissionPossible === false) {
             planetElement.style.fill = 'darkgrey';
         }
 
